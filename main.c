@@ -150,8 +150,8 @@ void FST_EnvAppend(FST_Env *env, FST_EnvVal *val) {
 
     uint8_t *arrByte = (uint8_t*) env->arr;
     memcpy(arrByte + env->lenBytes, val, totalBytes);
-//    FST_EnvVal *newVal = (FST_EnvVal*)(arrByte + env->lenBytes);
-//    newVal->ptr = ((uint8_t*) newVal) + sizeof(FST_EnvVal);
+    FST_EnvVal *newVal = (FST_EnvVal*)(arrByte + env->lenBytes);
+    newVal->ptr = ((uint8_t*) newVal) + sizeof(FST_EnvVal);
     env->sizes[env->len++] = totalBytes;
     env->lenBytes += totalBytes;
 }
