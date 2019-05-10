@@ -69,12 +69,15 @@ size_t FST_ValLenBytes(const enum FST_Type t) {
     }
 }
 
-FST_Val* FST_MkVal(enum FST_Type typ, FST_PtrDef v) {
+void FST_InitVal(FST_Val *val, enum FST_Type typ, FST_PtrDef ptr) {
     size_t typeSize = FST_ValLenBytes(typ);
-    size_t totalSize = sizeof(FST_Val) + typeSize;
-    FST_Val *ret = FST_Alloc(totalSize);
-    ret->typ = typ;
-    memcpy(ret->ptr, v, typeSize);
+    val->typ = typ;
+    memcpy(val->ptr, ptr, typeSize);
+}
+
+FST_Val* FST_MkVal(enum FST_Type typ, FST_PtrDef v) {
+    FST_Val *ret = FST_Alloc(sizeof(FST_Val) + FST_ValLenBytes(typ));
+    FST_InitVal(ret, typ, v);
     return ret;
 }
 
