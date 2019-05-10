@@ -5,6 +5,7 @@
 
 #define FST_StrDef char*
 #define FST_PtrDef void*
+#define FST_ValDef uint8_t
 #define FST_UintDef uint32_t
 #define FST_FloatDef float
 #define FST_EnvDefaultLen 32
@@ -21,10 +22,14 @@ typedef struct _FST_Str {
     FST_UintDef len;
 } FST_Str;
 
+typedef struct _FST_Val {
+    enum FST_Type typ;
+    FST_ValDef ptr[0];
+} FST_Val;
+
 typedef struct _FST_EnvVal {
     FST_Str name;
-    enum FST_Type typ;
-    FST_PtrDef ptr;
+    FST_Val val;
 } FST_EnvVal;
 
 typedef struct _FST_Env {
@@ -39,6 +44,10 @@ typedef struct _FST_Env {
 typedef struct _FST_Interp {
     FST_Env env;
 } FST_Interp;
+
+FST_PtrDef FST_Alloc(size_t bytes) {
+    return malloc(bytes);
+}
 
 size_t FST_ValLenBytes(const enum FST_Type t) {
     switch (t) {
@@ -56,16 +65,21 @@ size_t FST_ValLenBytes(const enum FST_Type t) {
     }
 }
 
-FST_EnvVal* FST_MkEnvVal(FST_Str name, FST_PtrDef v, enum FST_Type t) {
-    size_t typeSize = FST_ValLenBytes(t);
-    size_t totalSize = sizeof(FST_EnvVal) + typeSize;
-    FST_EnvVal *val = (FST_EnvVal*) malloc(totalSize);
+FST_Val* FST_MkVal(enum FST_Type typ, FST_PtrDef v) {
+    size_t typeSize = FST_ValLenBytes(typ);
+    size_t totalSize = sizeof(FST_Val) + typeSize;
+    FST_Val *ret = FST_Alloc(totalSize);
+    ret->typ = typ;
+    memcpy(ret->ptr, v, typeSize);
+    return ret;
+}
 
-    val->ptr = ((uint8_t*) val) + sizeof(FST_EnvVal);
-    memcpy(val->ptr, v, typeSize);
+FST_EnvVal* FST_MkEnvVal(FST_Str name, FST_PtrDef v, enum FST_Type typ) {
+    size_t valSize = FST_ValLenBytes(typ);
+    FST_EnvVal *val = FST_Alloc(sizeof(FST_EnvVal) + valSize);
     val->name = name;
-    val->typ = t;
-
+    val->val.typ = typ;
+    memcpy(&val->val.ptr, v, valSize);
     return val;
 }
 
@@ -90,9 +104,9 @@ void FST_InitEnv(FST_Env *env, FST_Env *parent, FST_UintDef len) {
     }
     FST_UintDef size = sizeof(FST_EnvVal) * len;
     env->parent = parent;
-    env->arr = malloc(size);
+    env->arr = FST_Alloc(size);
     memset(env->arr, 0, size);
-    env->sizes = malloc(sizeof(FST_UintDef) * len);
+    env->sizes = FST_Alloc(sizeof(FST_UintDef) * len);
     memset(env->sizes, 0, sizeof(FST_UintDef) * len);
     env->len = 0;
     env->lenBytes = 0;
@@ -103,7 +117,7 @@ FST_Env* FST_MkEnv2(FST_Env *parent, FST_UintDef len) {
     if (len == 0) {
         len = FST_EnvDefaultLen;
     }
-    FST_Env *ret = malloc(sizeof(FST_Env));
+    FST_Env *ret = FST_Alloc(sizeof(FST_Env));
     FST_InitEnv(ret, parent, len);
     return ret;
 }
@@ -112,7 +126,7 @@ FST_Env* FST_MkEnv1(FST_UintDef len) {
     if (len == 0) {
         len = FST_EnvDefaultLen;
     }
-    FST_Env *ret = malloc(sizeof(FST_Env));
+    FST_Env *ret = FST_Alloc(sizeof(FST_Env));
     FST_InitEnv(ret, NULL, len);
     return ret;
 }
@@ -129,7 +143,7 @@ FST_Env* FST_EnvChild(FST_Env *parent) {
 
 void FST_EnvResizeBigger(FST_Env *env) {
     FST_UintDef newCap = sizeof(FST_EnvVal) * env->cap * 2;
-    FST_EnvVal *newArr = malloc(newCap);
+    FST_EnvVal *newArr = FST_Alloc(newCap);
     memcpy(newArr, env->arr, env->lenBytes);
     free(env->arr);
     env->arr = newArr;
@@ -141,17 +155,15 @@ void FST_EnvAppend3(FST_Env *env, FST_Str name, FST_PtrDef v, enum FST_Type typ)
 }
 
 void FST_EnvAppend(FST_Env *env, FST_EnvVal *val) {
-    size_t typBytes = FST_ValLenBytes(val->typ);
+    size_t typBytes = FST_ValLenBytes(val->val.typ);
     size_t totalBytes = sizeof(FST_EnvVal) + typBytes;
 
     while (env->lenBytes + totalBytes >= env->cap) {
         FST_EnvResizeBigger(env);
     }
 
-    uint8_t *arrByte = (uint8_t*) env->arr;
+    uint8_t *arrByte = env->arr;
     memcpy(arrByte + env->lenBytes, val, totalBytes);
-    FST_EnvVal *newVal = (FST_EnvVal*)(arrByte + env->lenBytes);
-    newVal->ptr = ((uint8_t*) newVal) + sizeof(FST_EnvVal);
     env->sizes[env->len++] = totalBytes;
     env->lenBytes += totalBytes;
 }
@@ -174,30 +186,30 @@ FST_EnvVal* FST_EnvFindValByName(FST_Env *env, FST_Str name) {
 }
 
 FST_Interp* FST_MkInterp() {
-    FST_Interp *interp = (FST_Interp*) malloc(sizeof(FST_Interp));
+    FST_Interp *interp = (FST_Interp*) FST_Alloc(sizeof(FST_Interp));
     FST_InitEnv(&interp->env, NULL, FST_EnvDefaultLen);
     return interp;
 }
 
 void FST_PrnVal(FST_EnvVal *e) {
-    switch (e->typ) {
+    switch (e->val.typ) {
         case FST_TypeUint:
-            printf("INT(%d)\n", *(FST_UintDef*)e->ptr);
+            printf("INT(%d)\n", *(FST_UintDef*)e->val.ptr);
             break;
         case FST_TypeFloat:
-            printf("FLOAT(%f)\n", *(FST_FloatDef*)e->ptr);
+            printf("FLOAT(%f)\n", *(FST_FloatDef*)e->val.ptr);
             break;
         case FST_TypeStr:
-            printf("STR(%s)\n", (FST_StrDef)e->ptr);
+            printf("STR(%s)\n", (FST_StrDef)e->val.ptr);
             break;
         case FST_TypeFn:
-            printf("FUNC(%x)\n", *(unsigned int*)e->ptr);
+            printf("FUNC(%x)\n", *(unsigned int*)e->val.ptr);
             break;
     }
 }
 
 FST_Interp* FST_CpInterp(FST_Interp *i) {
-    FST_Interp *in = malloc(sizeof(FST_Interp));
+    FST_Interp *in = FST_Alloc(sizeof(FST_Interp));
     memcpy(in, i, sizeof(FST_Interp));
     return in;
 }
