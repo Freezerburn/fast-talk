@@ -49,6 +49,10 @@ FST_PtrDef FST_Alloc(size_t bytes) {
     return malloc(bytes);
 }
 
+void FST_Dealloc(FST_PtrDef ptr) {
+    free(ptr);
+}
+
 size_t FST_ValLenBytes(const enum FST_Type t) {
     switch (t) {
         case FST_TypeUint:
@@ -95,7 +99,7 @@ FST_Str FST_MkStr(FST_StrDef str) {
 }
 
 void FST_DelEnvVal(FST_EnvVal *e) {
-    free(e);
+    FST_Dealloc(e);
 }
 
 void FST_InitEnv(FST_Env *env, FST_Env *parent, FST_UintDef len) {
@@ -145,7 +149,7 @@ void FST_EnvResizeBigger(FST_Env *env) {
     FST_UintDef newCap = sizeof(FST_EnvVal) * env->cap * 2;
     FST_EnvVal *newArr = FST_Alloc(newCap);
     memcpy(newArr, env->arr, env->lenBytes);
-    free(env->arr);
+    FST_Dealloc(env->arr);
     env->arr = newArr;
     env->cap = newCap;
 }
@@ -215,7 +219,7 @@ FST_Interp* FST_CpInterp(FST_Interp *i) {
 }
 
 void FST_DelInterp(FST_Interp *i) {
-    free(i);
+    FST_Dealloc(i);
 }
 
 int main() {
