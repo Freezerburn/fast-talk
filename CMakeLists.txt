@@ -9,7 +9,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 add_executable(FastTalk
         CMakeLists.txt
-        main.c)
+        main.c FST_array.h FST_array.c FST_stdlib.c FST_stdlib.h)
 
 #INCLUDE(FindPkgConfig)
 #
