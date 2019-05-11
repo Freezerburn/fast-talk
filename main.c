@@ -9,7 +9,7 @@
 #define FST_ValDef uint8_t
 #define FST_UintDef uint32_t
 #define FST_FloatDef float
-#define FST_MsgCallbackDef(name) void (*name)(struct _FST_Object*, struct _FST_Msg*)
+#define FST_MsgCallbackDef(name) struct _FST_Object* (*name)(struct _FST_Object*, struct _FST_Msg*)
 #define FST_EnvDefaultLen 32
 
 enum FST_Type {
@@ -338,14 +338,13 @@ FST_MsgHandler FST_FindMsgHandler(FST_Object *obj, FST_Str name) {
     return nullRet;
 }
 
-int FST_HandleMsg(FST_Object *target, FST_Msg *msg) {
+FST_Object* FST_HandleMsg(FST_Object *target, FST_Msg *msg) {
     FST_MsgHandler handler = FST_FindMsgHandler(target, msg->name);
     if (handler.fn == NULL) {
-        return 1;
+        return NULL;
     }
 
-    handler.fn(target, msg);
-    return 0;
+    return handler.fn(target, msg);
 }
 
 FST_Object* FST_CastValToObj(FST_Val *val) {
@@ -382,7 +381,7 @@ void FST_PrnVal(FST_Val *val) {
             FST_MsgHandler handler = FST_FindMsgHandler(obj, FST_MkStr("prn"));
             if (handler.fn != NULL) {
                 FST_Msg *prnMsg = FST_MkMsg(FST_MkStr("prn"), NULL);
-                if (FST_HandleMsg(obj, prnMsg)) {
+                if (FST_HandleMsg(obj, prnMsg) != NULL) {
                     printf("OBJ(%s) cannot be printed.\n", obj->name.val);
                 }
                 FST_DelMsg(prnMsg);
@@ -405,9 +404,55 @@ void FST_DelInterp(FST_Interp *i) {
     FST_Dealloc(i);
 }
 
-void intPrintCallback(FST_Object *target, FST_Msg *msg) {
+FST_Object* intPrintCallback(FST_Object *target, FST_Msg *msg) {
     FST_EnvVal *v = FST_EnvFindValByName(target->env, FST_MkStr("intVal"));
-    printf("INT(%d)\n", *(FST_UintDef*)v->val.ptr);
+    printf("UINT(%d)\n", *(FST_UintDef*)v->val.ptr);
+    return NULL;
+}
+
+FST_Object* intPlusCallback(FST_Object *target, FST_Msg *msg) {
+    if (msg->len != 1) {
+        printf("UINT('+') message must be called with one parameter.\n");
+        // TODO: Set error
+        return NULL;
+    }
+
+    FST_EnvVal *intVal = FST_EnvFindValByName(target->env, FST_MkStr("intVal"));
+    FST_UintDef thisInt = *(FST_UintDef*) intVal->val.ptr;
+
+    FST_UintDef otherUint;
+    FST_Val *other = msg->args[0];
+    FST_EnvVal *e;
+    FST_Object *ret;
+    switch (other->typ) {
+        case FST_TypeUint:
+            otherUint = *(FST_UintDef*) other->ptr;
+            otherUint += thisInt;
+
+            ret = FST_MkObject(FST_MkStr("ret"));
+            FST_AddMsgHandler(ret, FST_MkStr("prn"), &intPrintCallback);
+            FST_AddMsgHandler(ret, FST_MkStr("+"), &intPlusCallback);
+            e = FST_MkEnvVal(FST_MkStr("intVal"), &otherUint, FST_TypeUint);
+            FST_EnvAppend(ret->env, e);
+            FST_DelEnvVal(e);
+            return ret;
+        case FST_TypeFloat:
+            printf("UINT('+') message does not support floats yet.");
+            // TODO: Support float add with uint plus
+            return NULL;
+        case FST_TypeStr:
+            printf("UINT('+') message does not support strings yet.");
+            // TODO: Support string add with uint plus
+            return NULL;
+        case FST_TypeObject:
+            printf("UINT('+') message does not support objects yet.");
+            // TODO: Support object add with uint plus
+            return NULL;
+        case FST_TypeFn:
+            printf("UINT('+') message cannot be used with a function argument.");
+            // TODO: Set error
+            return NULL;
+    }
 }
 
 int main() {
@@ -427,12 +472,17 @@ int main() {
 
     FST_Object *testInt = FST_MkObject(FST_MkStr("int"));
     FST_AddMsgHandler(testInt, FST_MkStr("prn"), &intPrintCallback);
+    FST_AddMsgHandler(testInt, FST_MkStr("+"), &intPlusCallback);
 
     e = FST_MkEnvVal(FST_MkStr("intVal"), &v, FST_TypeUint);
     FST_EnvAppend(testInt->env, e);
     FST_StaticMsg prnMsg = FST_MkMsgNonAlloc(FST_MkStr("prn"), NULL);
     FST_HandleMsg(testInt, FST_CastStaticMsgToMsg(&prnMsg));
-    FST_PrnVal(FST_CastObjToVal(testInt));
+
+    FST_Val *testPlusInt = FST_MkVal(FST_TypeUint, &v);
+    FST_StaticMsg plusMsg = FST_MkMsgNonAlloc(FST_MkStr("+"), testPlusInt, NULL);
+    FST_Object *result = FST_HandleMsg(testInt, FST_CastStaticMsgToMsg(&plusMsg));
+    FST_PrnVal(FST_CastObjToVal(result));
 
     return 0;
 }
