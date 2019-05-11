@@ -3,6 +3,10 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdarg.h>
+#include <time.h>
+#include <mach/mach_time.h> /* mach_absolute_time */
+#include <mach/mach.h>      /* host_get_clock_service, mach_... */
+#include <mach/clock.h>     /* clock_get_time */
 
 #define FST_StrDef char*
 #define FST_PtrDef void*
@@ -380,11 +384,10 @@ void FST_PrnVal(FST_Val *val) {
             obj = FST_CastValToObj(val);
             FST_MsgHandler handler = FST_FindMsgHandler(obj, FST_MkStr("prn"));
             if (handler.fn != NULL) {
-                FST_Msg *prnMsg = FST_MkMsg(FST_MkStr("prn"), NULL);
-                if (FST_HandleMsg(obj, prnMsg) != NULL) {
+                FST_StaticMsg prnMsg = FST_MkMsgNonAlloc(FST_MkStr("prn"), NULL);
+                if (FST_HandleMsg(obj, FST_CastStaticMsgToMsg(&prnMsg)) != NULL) {
                     printf("OBJ(%s) cannot be printed.\n", obj->name.val);
                 }
-                FST_DelMsg(prnMsg);
             }
             break;
     }
@@ -456,6 +459,11 @@ FST_Object* intPlusCallback(FST_Object *target, FST_Msg *msg) {
 }
 
 int main() {
+    mach_timebase_info_data_t timebase = {0, 0};
+    mach_timebase_info(&timebase);
+    uint64_t timebaseRatio = (uint64_t)timebase.numer / (uint64_t)timebase.denom;
+    uint64_t initclock = mach_absolute_time();
+
     FST_Interp *i = FST_MkInterp();
     FST_UintDef v = 10;
     FST_Str test = FST_MkStr("test");
@@ -479,9 +487,17 @@ int main() {
     FST_StaticMsg prnMsg = FST_MkMsgNonAlloc(FST_MkStr("prn"), NULL);
     FST_HandleMsg(testInt, FST_CastStaticMsgToMsg(&prnMsg));
 
+    uint64_t clock = mach_absolute_time() - initclock;
+    uint64_t nanoBefore = clock * timebaseRatio;
+
     FST_Val *testPlusInt = FST_MkVal(FST_TypeUint, &v);
     FST_StaticMsg plusMsg = FST_MkMsgNonAlloc(FST_MkStr("+"), testPlusInt, NULL);
     FST_Object *result = FST_HandleMsg(testInt, FST_CastStaticMsgToMsg(&plusMsg));
+
+    clock = mach_absolute_time() - initclock;
+    uint64_t nanoAfter = clock * timebaseRatio;
+    printf("%llu nanos\n", nanoAfter - nanoBefore);
+
     FST_PrnVal(FST_CastObjToVal(result));
 
     return 0;
