@@ -42,7 +42,6 @@ FST_Array FST_MkArray() {
 
 void FST_DelArray(FST_Array *arr) {
     FST_Dealloc(arr->byteIdxs);
-    FST_Dealloc(arr->ptr);
 }
 
 void FST_ArrResize(FST_Array *arr, FST_UintDef bytes) {
