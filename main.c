@@ -395,7 +395,7 @@ FST_MsgHandler FST_ClsFindMsgHandler(FST_Class *cls, FST_Str name) {
         }
     }
 
-    FST_MkNullMsgHandler();
+    return FST_MkNullMsgHandler();
 }
 
 void FST_ObjAddMsgHandler(FST_Object *obj, FST_Str name, FST_MsgCallbackDef(fn)) {
