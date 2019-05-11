@@ -415,16 +415,16 @@ void FST_ObjAddMsgHandler(FST_Object *obj, FST_Str name, FST_MsgCallbackDef(fn))
 }
 
 FST_MsgHandler FST_ObjFindMsgHandler(FST_Object *obj, FST_Str name) {
-    FST_MsgHandler clsHandler = FST_ClsFindMsgHandler(obj->clazz, name);
-    if (!FST_IsMsgHandlerNullP(&clsHandler)) {
-        return clsHandler;
-    }
-
     for (FST_UintDef i = 0; i < obj->len; i++) {
         FST_Str handName = obj->handlers[i].name;
         if (name.len == handName.len && strncmp(name.val, handName.val, name.len) == 0) {
             return obj->handlers[i];
         }
+    }
+
+    FST_MsgHandler clsHandler = FST_ClsFindMsgHandler(obj->clazz, name);
+    if (!FST_IsMsgHandlerNullP(&clsHandler)) {
+        return clsHandler;
     }
 
     return FST_MkNullMsgHandler();
