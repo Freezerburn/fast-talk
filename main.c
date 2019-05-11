@@ -39,6 +39,12 @@ typedef struct _FST_Msg {
     FST_Val *args[0];
 } FST_Msg;
 
+typedef struct _FST_StaticMsg {
+    FST_Str name;
+    FST_UintDef len;
+    FST_Val *args[10];
+} FST_StaticMsg;
+
 typedef struct _FST_MsgHandler {
     FST_Str name;
     FST_MsgCallbackDef(fn);
@@ -140,6 +146,39 @@ FST_Msg* FST_MkMsg(FST_Str name, ...) {
 
     va_end(args);
     return ret;
+}
+
+FST_StaticMsg FST_MkMsgNonAlloc(FST_Str name, ...) {
+    va_list args;
+    va_list argsCheck;
+    va_start(args, name);
+    va_copy(argsCheck, args);
+
+    FST_UintDef len = 0;
+    FST_Val *arg;
+    while ((arg = va_arg(argsCheck, FST_Val*)) != NULL) {
+        len++;
+    }
+    va_end(argsCheck);
+
+    if (len > 10) {
+        printf("[CRITICAL] Attempted to allocate a static msg with more than 10 arguments.");
+        exit(1);
+    }
+
+    FST_StaticMsg ret;
+    len = 0;
+    while ((arg = va_arg(args, FST_Val*)) != NULL) {
+        ret.args[len++] = arg;
+    }
+    ret.len = len;
+    ret.name = name;
+    va_end(args);
+    return ret;
+}
+
+FST_Msg* FST_CastStaticMsgToMsg(FST_StaticMsg *msg) {
+    return (FST_Msg*) msg;
 }
 
 void FST_DelMsg(FST_Msg *msg) {
@@ -391,9 +430,8 @@ int main() {
 
     e = FST_MkEnvVal(FST_MkStr("intVal"), &v, FST_TypeUint);
     FST_EnvAppend(testInt->env, e);
-    FST_Msg *prnMsg = FST_MkMsg(FST_MkStr("prn"), NULL);
-    FST_HandleMsg(testInt, prnMsg);
-    FST_DelMsg(prnMsg);
+    FST_StaticMsg prnMsg = FST_MkMsgNonAlloc(FST_MkStr("prn"), NULL);
+    FST_HandleMsg(testInt, FST_CastStaticMsgToMsg(&prnMsg));
     FST_PrnVal(FST_CastObjToVal(testInt));
 
     return 0;
