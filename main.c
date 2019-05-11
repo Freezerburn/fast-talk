@@ -4,9 +4,12 @@
 #include <string.h>
 #include <stdarg.h>
 #include <time.h>
+
+#ifdef __MACH__
 #include <mach/mach_time.h> /* mach_absolute_time */
 #include <mach/mach.h>      /* host_get_clock_service, mach_... */
 #include <mach/clock.h>     /* clock_get_time */
+#endif
 
 #define FST_StrDef char*
 #define FST_PtrDef void*
@@ -573,10 +576,12 @@ FST_Object* intPlusCallback(FST_Interp *interp, FST_Object *target, FST_Msg *msg
 }
 
 int main() {
+#ifdef __MACH__
     mach_timebase_info_data_t timebase = {0, 0};
     mach_timebase_info(&timebase);
     uint64_t timebaseRatio = (uint64_t)timebase.numer / (uint64_t)timebase.denom;
     uint64_t initclock = mach_absolute_time();
+#endif
 
     FST_Interp *interp = FST_MkInterp();
     FST_Class *intCls = FST_MkClass(interp, FST_MkStr("int"));
@@ -603,16 +608,20 @@ int main() {
     FST_StaticMsg prnMsg = FST_MkMsgNonAlloc(FST_MkStr("prn"), NULL);
     FST_ObjHandleMsg(interp, testInt, FST_CastStaticMsgToMsg(&prnMsg));
 
+#ifdef __MACH__
     uint64_t clock = mach_absolute_time() - initclock;
     uint64_t nanoBefore = clock * timebaseRatio;
+#endif
 
     FST_Val *testPlusInt = FST_MkVal(FST_TypeUint, &v);
     FST_StaticMsg plusMsg = FST_MkMsgNonAlloc(FST_MkStr("+"), testPlusInt, NULL);
     FST_Object *result = FST_ObjHandleMsg(interp, testInt, FST_CastStaticMsgToMsg(&plusMsg));
 
+#ifdef __MACH__
     clock = mach_absolute_time() - initclock;
     uint64_t nanoAfter = clock * timebaseRatio;
     printf("%llu nanos\n", nanoAfter - nanoBefore);
+#endif
 
     FST_PrnVal(interp, FST_CastObjToVal(result));
 
