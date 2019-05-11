@@ -13,7 +13,8 @@
 #define FST_ValDef uint8_t
 #define FST_UintDef uint32_t
 #define FST_FloatDef float
-#define FST_MsgCallbackDef(name) struct _FST_Object* (*name)(struct _FST_Object*, struct _FST_Msg*)
+#define FST_BoolDef uint8_t
+#define FST_MsgCallbackDef(name) struct _FST_Object* (*name)(struct _FST_Interp*, struct _FST_Object*, struct _FST_Msg*)
 #define FST_EnvDefaultLen 32
 
 enum FST_Type {
@@ -25,12 +26,17 @@ enum FST_Type {
 };
 
 struct _FST_Object;
+struct _FST_Class;
 struct _FST_Msg;
+struct _FST_Interp;
 
 typedef struct _FST_Str {
     FST_StrDef val;
     FST_UintDef len;
 } FST_Str;
+
+void FST_InterpAddCls(struct _FST_Interp *interp, struct _FST_Class *cls);
+struct _FST_Class* FST_InterpFindCls(struct _FST_Interp *interp, struct _FST_Str name);
 
 typedef struct _FST_Val {
     enum FST_Type typ;
@@ -68,17 +74,27 @@ typedef struct _FST_Env {
     FST_UintDef cap;
 } FST_Env;
 
+typedef struct _FST_Class {
+    FST_Str name;
+    FST_UintDef len;
+    FST_UintDef cap;
+    FST_MsgHandler *handlers;
+} FST_Class;
+
 typedef struct _FST_Object {
     enum FST_Type typ;
-    FST_Str name;
     FST_Env *env;
     FST_UintDef len;
     FST_UintDef cap;
     FST_MsgHandler *handlers;
+    FST_Class *clazz;
 } FST_Object;
 
 typedef struct _FST_Interp {
-    FST_Env env;
+    FST_Env globalEnv;
+    FST_UintDef len;
+    FST_UintDef cap;
+    FST_Class *clazzes;
 } FST_Interp;
 
 FST_PtrDef FST_Alloc(size_t bytes) {
@@ -220,8 +236,8 @@ void FST_InitEnv(FST_Env *env, FST_Env *parent, FST_UintDef len) {
     FST_UintDef size = sizeof(FST_EnvVal) * len;
     env->parent = parent;
     env->arr = FST_Alloc(size);
-    memset(env->arr, 0, size);
     env->sizes = FST_Alloc(sizeof(FST_UintDef) * len);
+    memset(env->arr, 0, size);
     memset(env->sizes, 0, sizeof(FST_UintDef) * len);
     env->len = 0;
     env->lenBytes = 0;
@@ -250,6 +266,12 @@ FST_Env* FST_MkEnv() {
     return FST_MkEnv1(FST_EnvDefaultLen);
 }
 
+void FST_DelEnv(FST_Env *env) {
+    FST_Dealloc(env->arr);
+    FST_Dealloc(env->sizes);
+    FST_Dealloc(env);
+}
+
 FST_Env* FST_EnvChild(FST_Env *parent) {
     FST_Env *child = FST_MkEnv2(parent, FST_EnvDefaultLen);
     child->parent = parent;
@@ -266,7 +288,7 @@ void FST_EnvResizeBigger(FST_Env *env) {
 }
 
 void FST_EnvAppend3(FST_Env *env, FST_Str name, FST_PtrDef v, enum FST_Type typ) {
-    // TODO: Append values to env without having to separately allocate a val.
+    // TODO: Append values to globalEnv without having to separately allocate a val.
 }
 
 void FST_EnvAppend(FST_Env *env, FST_EnvVal *val) {
@@ -300,18 +322,80 @@ FST_EnvVal* FST_EnvFindValByName(FST_Env *env, FST_Str name) {
     return NULL;
 }
 
-FST_Object* FST_MkObject(FST_Str name) {
+
+FST_MsgHandler FST_MkMsgHandler(FST_Str name, FST_MsgCallbackDef(fn)) {
+    FST_MsgHandler ret;
+    ret.name = name;
+    ret.fn = fn;
+    return ret;
+}
+
+FST_MsgHandler FST_MkNullMsgHandler() {
+    return FST_MkMsgHandler(FST_MkStr2("", 0), NULL);
+}
+
+FST_BoolDef FST_IsMsgHandlerNull(FST_MsgHandler handler) {
+    return handler.fn == NULL;
+}
+
+FST_BoolDef FST_IsMsgHandlerNullP(FST_MsgHandler *handler) {
+    return handler->fn == NULL;
+}
+
+FST_Class* FST_MkClass(FST_Interp *interp, FST_Str name) {
+    FST_Class *existing = FST_InterpFindCls(interp, name);
+    if (existing != NULL) {
+        return existing;
+    }
+
+    FST_Class *ret = FST_Alloc(sizeof(FST_Class));
+    ret->name = name;
+    ret->len = 0;
+    ret->cap = 10;
+    ret->handlers = FST_Alloc(sizeof(FST_MsgHandler) * 10);
+    FST_InterpAddCls(interp, ret);
+    return ret;
+}
+
+FST_Object* FST_MkObject(FST_Class *clazz) {
     FST_Object *ret = FST_Alloc(sizeof(FST_Object));
     ret->typ = FST_TypeObject;
-    ret->name = name;
     ret->env = FST_MkEnv();
     ret->len = 0;
     ret->cap = 10;
     ret->handlers = FST_Alloc(sizeof(FST_MsgHandler) * 10);
+    ret->clazz = clazz;
     return ret;
 }
 
-void FST_AddMsgHandler(FST_Object *obj, FST_Str name, FST_MsgCallbackDef(fn)) {
+void FST_ClsAddMsgHandler(FST_Class *cls, FST_Str name, FST_MsgCallbackDef(fn)) {
+    if (cls->len == cls->cap) {
+        FST_UintDef newCap = cls->cap * 2;
+        FST_MsgHandler *newHandlers = FST_Alloc(sizeof(FST_MsgHandler) * newCap);
+        memcpy(newHandlers, cls->handlers, sizeof(FST_MsgHandler) * cls->cap);
+        FST_Dealloc(cls->handlers);
+        cls->handlers = newHandlers;
+        cls->cap = newCap;
+    }
+
+    FST_MsgHandler handler;
+    handler.name = name;
+    handler.fn = fn;
+    cls->handlers[cls->len++] = handler;
+}
+
+FST_MsgHandler FST_ClsFindMsgHandler(FST_Class *cls, FST_Str name) {
+    for (FST_UintDef i = 0; i < cls->len; i++) {
+        FST_Str handName = cls->handlers[i].name;
+        if (name.len == handName.len && strncmp(name.val, handName.val, name.len) == 0) {
+            return cls->handlers[i];
+        }
+    }
+
+    FST_MkNullMsgHandler();
+}
+
+void FST_ObjAddMsgHandler(FST_Object *obj, FST_Str name, FST_MsgCallbackDef(fn)) {
     if (obj->len == obj->cap) {
         FST_UintDef newCap = obj->cap * 2;
         FST_MsgHandler *newHandlers = FST_Alloc(sizeof(FST_MsgHandler) * newCap);
@@ -327,7 +411,12 @@ void FST_AddMsgHandler(FST_Object *obj, FST_Str name, FST_MsgCallbackDef(fn)) {
     obj->handlers[obj->len++] = handler;
 }
 
-FST_MsgHandler FST_FindMsgHandler(FST_Object *obj, FST_Str name) {
+FST_MsgHandler FST_ObjFindMsgHandler(FST_Object *obj, FST_Str name) {
+    FST_MsgHandler clsHandler = FST_ClsFindMsgHandler(obj->clazz, name);
+    if (!FST_IsMsgHandlerNullP(&clsHandler)) {
+        return clsHandler;
+    }
+
     for (FST_UintDef i = 0; i < obj->len; i++) {
         FST_Str handName = obj->handlers[i].name;
         if (name.len == handName.len && strncmp(name.val, handName.val, name.len) == 0) {
@@ -335,20 +424,16 @@ FST_MsgHandler FST_FindMsgHandler(FST_Object *obj, FST_Str name) {
         }
     }
 
-    FST_MsgHandler nullRet;
-    nullRet.fn = NULL;
-    nullRet.name.len = 0;
-    nullRet.name.val = "";
-    return nullRet;
+    return FST_MkNullMsgHandler();
 }
 
-FST_Object* FST_HandleMsg(FST_Object *target, FST_Msg *msg) {
-    FST_MsgHandler handler = FST_FindMsgHandler(target, msg->name);
+FST_Object* FST_ObjHandleMsg(FST_Interp *interp, FST_Object *target, FST_Msg *msg) {
+    FST_MsgHandler handler = FST_ObjFindMsgHandler(target, msg->name);
     if (handler.fn == NULL) {
         return NULL;
     }
 
-    return handler.fn(target, msg);
+    return handler.fn(interp, target, msg);
 }
 
 FST_Object* FST_CastValToObj(FST_Val *val) {
@@ -359,13 +444,7 @@ FST_Val* FST_CastObjToVal(FST_Object *obj) {
     return (FST_Val*) obj;
 }
 
-FST_Interp* FST_MkInterp() {
-    FST_Interp *interp = (FST_Interp*) FST_Alloc(sizeof(FST_Interp));
-    FST_InitEnv(&interp->env, NULL, FST_EnvDefaultLen);
-    return interp;
-}
-
-void FST_PrnVal(FST_Val *val) {
+void FST_PrnVal(FST_Interp *interp, FST_Val *val) {
     FST_Object *obj;
     switch (val->typ) {
         case FST_TypeUint:
@@ -382,38 +461,75 @@ void FST_PrnVal(FST_Val *val) {
             break;
         case FST_TypeObject:
             obj = FST_CastValToObj(val);
-            FST_MsgHandler handler = FST_FindMsgHandler(obj, FST_MkStr("prn"));
+            FST_MsgHandler handler = FST_ObjFindMsgHandler(obj, FST_MkStr("prn"));
             if (handler.fn != NULL) {
                 FST_StaticMsg prnMsg = FST_MkMsgNonAlloc(FST_MkStr("prn"), NULL);
-                if (FST_HandleMsg(obj, FST_CastStaticMsgToMsg(&prnMsg)) != NULL) {
-                    printf("OBJ(%s) cannot be printed.\n", obj->name.val);
+                if (FST_ObjHandleMsg(interp, obj, FST_CastStaticMsgToMsg(&prnMsg)) != NULL) {
+                    printf("OBJ(%s) cannot be printed.\n", obj->clazz->name.val);
                 }
             }
             break;
     }
 }
 
-void FST_PrnEnvVal(FST_EnvVal *e) {
-    FST_PrnVal(&e->val);
+void FST_PrnEnvVal(FST_Interp *interp, FST_EnvVal *e) {
+    FST_PrnVal(interp, &e->val);
+}
+
+FST_Interp* FST_MkInterp() {
+    FST_Interp *interp = (FST_Interp*) FST_Alloc(sizeof(FST_Interp));
+    FST_InitEnv(&interp->globalEnv, NULL, FST_EnvDefaultLen);
+    interp->len = 0;
+    interp->cap = 10;
+    interp->clazzes = FST_Alloc(sizeof(FST_Class) * 10);
+    return interp;
 }
 
 FST_Interp* FST_CpInterp(FST_Interp *i) {
     FST_Interp *in = FST_Alloc(sizeof(FST_Interp));
-    memcpy(in, i, sizeof(FST_Interp));
+    size_t cap = (size_t)(i->len * 1.5f);
+    in->clazzes = FST_Alloc(sizeof(FST_Class) * cap);
+    in->len = i->len;
+    in->cap = cap;
+    memcpy(in->clazzes, i->clazzes, sizeof(FST_Class) * i->len);
     return in;
 }
 
 void FST_DelInterp(FST_Interp *i) {
+    FST_Dealloc(i->clazzes);
     FST_Dealloc(i);
 }
 
-FST_Object* intPrintCallback(FST_Object *target, FST_Msg *msg) {
+void FST_InterpAddCls(FST_Interp *interp, FST_Class *cls) {
+    if (interp->len == interp->cap) {
+        FST_UintDef newCap = interp->cap * 2;
+        FST_Class *newClazzes = FST_Alloc(sizeof(FST_Class) * newCap);
+        memcpy(newClazzes, interp->clazzes, sizeof(FST_Class) * interp->cap);
+        FST_Dealloc(interp->clazzes);
+        interp->clazzes = newClazzes;
+        interp->cap = newCap;
+    }
+
+    interp->clazzes[interp->len++] = *cls;
+}
+
+FST_Class *FST_InterpFindCls(FST_Interp *interp, FST_Str name) {
+    for (FST_UintDef i = 0; i < interp->len; i++) {
+        if (name.len == interp->clazzes[i].name.len && strncmp(name.val, interp->clazzes[i].name.val, name.len) == 0) {
+            return interp->clazzes + i;
+        }
+    }
+
+    return NULL;
+}
+
+FST_Object* intPrintCallback(FST_Interp *interp, FST_Object *target, FST_Msg *msg) {
     FST_EnvVal *v = FST_EnvFindValByName(target->env, FST_MkStr("intVal"));
     printf("UINT(%d)\n", *(FST_UintDef*)v->val.ptr);
     return NULL;
 }
 
-FST_Object* intPlusCallback(FST_Object *target, FST_Msg *msg) {
+FST_Object* intPlusCallback(FST_Interp *interp, FST_Object *target, FST_Msg *msg) {
     if (msg->len != 1) {
         printf("UINT('+') message must be called with one parameter.\n");
         // TODO: Set error
@@ -432,9 +548,7 @@ FST_Object* intPlusCallback(FST_Object *target, FST_Msg *msg) {
             otherUint = *(FST_UintDef*) other->ptr;
             otherUint += thisInt;
 
-            ret = FST_MkObject(FST_MkStr("ret"));
-            FST_AddMsgHandler(ret, FST_MkStr("prn"), &intPrintCallback);
-            FST_AddMsgHandler(ret, FST_MkStr("+"), &intPlusCallback);
+            ret = FST_MkObject(target->clazz);
             e = FST_MkEnvVal(FST_MkStr("intVal"), &otherUint, FST_TypeUint);
             FST_EnvAppend(ret->env, e);
             FST_DelEnvVal(e);
@@ -464,41 +578,43 @@ int main() {
     uint64_t timebaseRatio = (uint64_t)timebase.numer / (uint64_t)timebase.denom;
     uint64_t initclock = mach_absolute_time();
 
-    FST_Interp *i = FST_MkInterp();
+    FST_Interp *interp = FST_MkInterp();
+    FST_Class *intCls = FST_MkClass(interp, FST_MkStr("int"));
+    FST_ClsAddMsgHandler(intCls, FST_MkStr("prn"), &intPrintCallback);
+    FST_ClsAddMsgHandler(intCls, FST_MkStr("+"), &intPlusCallback);
+
     FST_UintDef v = 10;
     FST_Str test = FST_MkStr("test");
     FST_EnvVal *e = FST_MkEnvVal(test, &v, FST_TypeUint);
-    FST_EnvAppend(&i->env, e);
+    FST_EnvAppend(&interp->globalEnv, e);
     FST_DelEnvVal(e);
 
-    e = FST_EnvFindValByName(&i->env, FST_MkStr("test"));
+    e = FST_EnvFindValByName(&interp->globalEnv, FST_MkStr("test"));
     if (e == NULL) {
         printf("FAIL 2: Did not find\n");
         exit(1);
     }
-    FST_PrnEnvVal(e);
+    FST_PrnEnvVal(interp, e);
 
-    FST_Object *testInt = FST_MkObject(FST_MkStr("int"));
-    FST_AddMsgHandler(testInt, FST_MkStr("prn"), &intPrintCallback);
-    FST_AddMsgHandler(testInt, FST_MkStr("+"), &intPlusCallback);
+    FST_Object *testInt = FST_MkObject(intCls);
 
     e = FST_MkEnvVal(FST_MkStr("intVal"), &v, FST_TypeUint);
     FST_EnvAppend(testInt->env, e);
     FST_StaticMsg prnMsg = FST_MkMsgNonAlloc(FST_MkStr("prn"), NULL);
-    FST_HandleMsg(testInt, FST_CastStaticMsgToMsg(&prnMsg));
+    FST_ObjHandleMsg(interp, testInt, FST_CastStaticMsgToMsg(&prnMsg));
 
     uint64_t clock = mach_absolute_time() - initclock;
     uint64_t nanoBefore = clock * timebaseRatio;
 
     FST_Val *testPlusInt = FST_MkVal(FST_TypeUint, &v);
     FST_StaticMsg plusMsg = FST_MkMsgNonAlloc(FST_MkStr("+"), testPlusInt, NULL);
-    FST_Object *result = FST_HandleMsg(testInt, FST_CastStaticMsgToMsg(&plusMsg));
+    FST_Object *result = FST_ObjHandleMsg(interp, testInt, FST_CastStaticMsgToMsg(&plusMsg));
 
     clock = mach_absolute_time() - initclock;
     uint64_t nanoAfter = clock * timebaseRatio;
     printf("%llu nanos\n", nanoAfter - nanoBefore);
 
-    FST_PrnVal(FST_CastObjToVal(result));
+    FST_PrnVal(interp, FST_CastObjToVal(result));
 
     return 0;
 }
