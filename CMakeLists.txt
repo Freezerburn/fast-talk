@@ -3,11 +3,15 @@ project(FastTalk)
 
 set(CMAKE_CXX_STANDARD 14)
 
+set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
 add_executable(FastTalk
         CMakeLists.txt
         main.c)
 
-INCLUDE(FindPkgConfig)
+#INCLUDE(FindPkgConfig)
 #
 #PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
 #
