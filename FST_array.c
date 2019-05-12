@@ -24,7 +24,7 @@ FST_Array FST_MkArray3(FST_UintDef valueSize, FST_UintDef initialCap, FST_FloatD
     allArr = FST_Alloc(sizeof(FST_UintDef) * (initialCap + 1) + ret.capBytes);
     ret.byteIdxs = allArr;
     ret.ptr = (uint8_t*)(allArr) + sizeof(FST_UintDef) * (initialCap + 1);
-    memset(ret.ptr, 0, sizeof(FST_UintDef) * (initialCap + 1) + ret.capBytes);
+    memset(allArr, 0, sizeof(FST_UintDef) * (initialCap + 1) + ret.capBytes);
     return ret;
 }
 
