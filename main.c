@@ -535,15 +535,16 @@ int main() {
 #endif
 
     int runs = 10000000;
-    FST_Val *testPlusInt = FST_MkVal(FST_TypeUint, &v);
     for (int i = 0; i < runs; i++) {
 #ifdef __MACH__
         uint64_t clock = mach_absolute_time() - initclock;
         uint64_t nanoBefore = clock * timebaseRatio;
 #endif
+        FST_Val *testPlusInt = FST_MkVal(FST_TypeUint, &v);
         FST_StaticMsg plusMsg = FST_MkMsgNonAlloc(FST_MkStr("+"), testPlusInt, NULL);
         FST_Object *result = FST_ObjHandleMsg(interp, testInt, FST_CastStaticMsgToMsg(&plusMsg));
         FST_DelObject(result);
+        FST_DelVal(testPlusInt);
 
 #ifdef __MACH__
         clock = mach_absolute_time() - initclock;
@@ -551,7 +552,6 @@ int main() {
         total += (nanoAfter - nanoBefore);
 #endif
     }
-    FST_DelVal(testPlusInt);
 
 #ifdef __MACH__
     printf("%llu nanos\n", total / runs);
