@@ -180,6 +180,13 @@ void FST_DelMsg(FST_Msg *msg) {
     FST_Dealloc(msg);
 }
 
+void FST_InitEnvVal(FST_EnvVal *val, FST_Str name, FST_PtrDef v, enum FST_Type typ) {
+    size_t valSize = FST_ValLenBytes(typ);
+    val->name = name;
+    val->val.typ = typ;
+    memcpy(val->val.ptr, v, valSize);
+}
+
 FST_EnvVal* FST_MkEnvVal(FST_Str name, FST_PtrDef v, enum FST_Type typ) {
     size_t valSize = FST_ValLenBytes(typ);
     FST_EnvVal *val = FST_Alloc(sizeof(FST_EnvVal) + valSize);
@@ -246,7 +253,12 @@ FST_Env* FST_EnvChild(FST_Env *parent) {
 }
 
 void FST_EnvAppend3(FST_Env *env, FST_Str name, FST_PtrDef v, enum FST_Type typ) {
-    // TODO: Append values to globalEnv without having to separately allocate a val.
+    size_t typBytes = FST_ValLenBytes(typ);
+    size_t totalBytes = sizeof(FST_EnvVal) + typBytes;
+    uint8_t envVarBytes[totalBytes];
+    FST_EnvVal *envVal = (FST_EnvVal*) envVarBytes;
+    FST_InitEnvVal(envVal, name, v, typ);
+    FST_ArrPush2(&env->values, totalBytes, envVal);
 }
 
 void FST_EnvAppend(FST_Env *env, FST_EnvVal *val) {
@@ -308,9 +320,8 @@ FST_Object* FST_MkObject(FST_Class *clazz) {
     ret->env = FST_MkEnv();
     // Lazy init the handlers array only when someone actually adds a handler specifically for this object and isn't
     // just using the inherited messages from the class.
-    ret->handlers = FST_MkArray1(sizeof(FST_MsgHandler));
-//    ret->handlers.cap = 0;
-//    ret->handlers.len = 0;
+    ret->handlers.cap = 0;
+    ret->handlers.len = 0;
     ret->clazz = clazz;
     return ret;
 }
@@ -477,9 +488,7 @@ FST_Object* intPlusCallback(FST_Interp *interp, FST_Object *target, FST_Msg *msg
             otherUint += thisInt;
 
             ret = FST_MkObject(target->clazz);
-            e = FST_MkEnvVal(FST_MkStr("intVal"), &otherUint, FST_TypeUint);
-            FST_EnvAppend(ret->env, e);
-            FST_DelEnvVal(e);
+            FST_EnvAppend3(ret->env, FST_MkStr("intVal"), &otherUint, FST_TypeUint);
             return ret;
         case FST_TypeFloat:
             printf("UINT('+') message does not support floats yet.");
@@ -522,22 +531,30 @@ int main() {
     FST_DelEnvVal(e);
 
 #ifdef __MACH__
-    uint64_t clock = mach_absolute_time() - initclock;
-    uint64_t nanoBefore = clock * timebaseRatio;
+    uint64_t total = 0;
 #endif
 
-    for (int i = 0; i < 10000000; i++) {
-        FST_Val *testPlusInt = FST_MkVal(FST_TypeUint, &i);
+    int runs = 10000000;
+    FST_Val *testPlusInt = FST_MkVal(FST_TypeUint, &v);
+    for (int i = 0; i < runs; i++) {
+#ifdef __MACH__
+        uint64_t clock = mach_absolute_time() - initclock;
+        uint64_t nanoBefore = clock * timebaseRatio;
+#endif
         FST_StaticMsg plusMsg = FST_MkMsgNonAlloc(FST_MkStr("+"), testPlusInt, NULL);
         FST_Object *result = FST_ObjHandleMsg(interp, testInt, FST_CastStaticMsgToMsg(&plusMsg));
-        FST_DelVal(testPlusInt);
         FST_DelObject(result);
-    }
 
 #ifdef __MACH__
-    clock = mach_absolute_time() - initclock;
-    uint64_t nanoAfter = clock * timebaseRatio;
-    printf("%llu nanos\n", nanoAfter - nanoBefore);
+        clock = mach_absolute_time() - initclock;
+        uint64_t nanoAfter = clock * timebaseRatio;
+        total += (nanoAfter - nanoBefore);
+#endif
+    }
+    FST_DelVal(testPlusInt);
+
+#ifdef __MACH__
+    printf("%llu nanos\n", total / runs);
 #endif
 
     return 0;
