@@ -13,8 +13,12 @@
 #define FST_UintDef uint32_t
 #define FST_FloatDef float
 #define FST_BoolDef uint8_t
+#define FST_ErrDef uint32_t
 #define FST_MsgCallbackDef(name) struct FST_Object* (*name)(struct FST_Interp*, struct FST_Object*, struct FST_Msg*)
+
 #define FST_EnvDefaultLen 32
+
+#define FST_NO_ERR 0
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,6 +34,10 @@ enum FST_Type {
 
 FST_PtrDef FST_Alloc(FST_UintDef bytes);
 void FST_Dealloc(FST_PtrDef ptr);
+
+FST_ErrDef FST_ResetErr();
+FST_ErrDef FST_SetErr(FST_ErrDef errValue);
+FST_ErrDef FST_GetErr();
 
 #ifdef __cplusplus
 }
