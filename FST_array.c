@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "FST_array.h"
 #include "FST_stdlib.h"
@@ -22,6 +23,22 @@ FST_Array FST_MkArray3(FST_UintDef valueSize, FST_UintDef initialCap, FST_FloatD
         ret.capBytes = valueSize * initialCap;
     }
     allArr = FST_Alloc(sizeof(FST_UintDef) * (initialCap + 1) + ret.capBytes);
+#if PARANOID_ERRORS
+    FST_ErrDef err = FST_GetErr();
+    if (err) {
+        switch (err) {
+            case FST_ERR_ALLOC:
+                printf("[ERROR] [FST_MkArray3] Alloc failed due to malloc returning null.\n");
+                break;
+            default:
+                printf("[ERROR] [FST_MkArray3] Alloc failed for unknown reasons.\n");
+                break;
+        }
+        memset(&ret, 0, sizeof(FST_Array));
+        return ret;
+    }
+#endif
+
     ret.byteIdxs = allArr;
     ret.ptr = (uint8_t*)(allArr) + sizeof(FST_UintDef) * (initialCap + 1);
     memset(allArr, 0, sizeof(FST_UintDef) * (initialCap + 1) + ret.capBytes);
@@ -47,8 +64,8 @@ void FST_DelArray(FST_Array *arr) {
 void FST_ArrResize(FST_Array *arr, FST_UintDef bytes) {
     FST_UintDef totalStoredBytes = arr->byteIdxs[arr->len];
     if (bytes < totalStoredBytes) {
-        // TODO: Set error
-        exit(1);
+        FST_SetErr(FST_ERR_ARR_TOO_SMALL);
+        return;
     }
 
     FST_UintDef newSizesCap;
@@ -97,8 +114,8 @@ void FST_ArrPush2(FST_Array *arr, FST_UintDef valueSize, FST_PtrDef value) {
 
 void FST_ArrPush(FST_Array *arr, FST_PtrDef value) {
     if (arr->defaultValueSize == 0) {
-        // TODO: Set error
-        exit(1);
+        FST_SetErr(FST_ERR_ARR_DEFAULT_SIZE);
+        return;
     }
     FST_ArrPush2(arr, arr->defaultValueSize, value);
 }
@@ -115,7 +132,7 @@ FST_PtrDef FST_ArrPop(FST_Array *arr) {
 
 FST_PtrDef FST_ArrGet(FST_Array *arr, FST_UintDef idx) {
     if (idx >= arr->len) {
-        // TODO: Set error
+        FST_SetErr(FST_ERR_ARR_IDX_OUT_OF_RANGE);
         return NULL;
     }
 

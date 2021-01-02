@@ -7,6 +7,8 @@
 
 #include <stdint.h>
 
+#define PARANOID_ERRORS 1
+
 #define FST_StrDef char*
 #define FST_PtrDef void*
 #define FST_ValDef uint8_t
@@ -19,6 +21,10 @@
 #define FST_EnvDefaultLen 32
 
 #define FST_NO_ERR 0
+#define FST_ERR_ARR_TOO_SMALL 1
+#define FST_ERR_ARR_DEFAULT_SIZE 2
+#define FST_ERR_ARR_IDX_OUT_OF_RANGE 3
+#define FST_ERR_ALLOC 4
 
 #ifdef __cplusplus
 extern "C" {
