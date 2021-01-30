@@ -3,41 +3,46 @@
 
 #include "FST_stdlib.h"
 #include "FST_str.h"
-#include "FST_val.h"
 #include "FST_interpreter.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct FST_Msg {
-    FST_Str name;
-    FST_UintDef len;
-    FST_Val *args[0];
-} FST_Msg;
+struct Ft_Msg;
 
-typedef struct FST_StaticMsg {
-    FST_Str name;
-    FST_UintDef len;
-    FST_Val *args[10];
-} FST_StaticMsg;
+typedef struct Ft_Obj *(*Ft_MsgCallback)(struct Ft_Interp *, struct Ft_Obj *, struct Ft_Msg *);
 
-typedef struct FST_MsgHandler {
-    FST_Str name;
-    FST_MsgCallbackDef(fn);
-} FST_MsgHandler;
+struct Ft_Msg {
+    Ft_Str name;
+    Ft_Uint len;
+    struct Ft_Obj *args[0];
+};
+struct Ft_StaticMsg {
+    Ft_Str name;
+    Ft_Uint len;
+    struct Ft_Obj *args[10];
+};
+struct Ft_MsgHandler {
+    Ft_Str name;
+    Ft_MsgCallback fn;
+};
 
-FST_Msg* FST_MkMsg(FST_Str name, ...);
-void FST_DelMsg(FST_Msg *msg);
-FST_StaticMsg FST_MkMsgNonAlloc(FST_Str name, ...);
+typedef struct Ft_Msg Ft_Msg;
+typedef struct Ft_StaticMsg Ft_StaticMsg;
+typedef struct Ft_MsgHandler Ft_MsgHandler;
 
-FST_Msg* FST_CastStaticMsgToMsg(FST_StaticMsg *msg);
+Ft_Msg* FtMsg_Init(Ft_Str name, ...);
+void FtMsg_Del(Ft_Msg *msg);
+Ft_StaticMsg FtStaticMsg_Init(Ft_Str name, ...);
 
-FST_MsgHandler FST_MkMsgHandler(FST_Str name, FST_MsgCallbackDef(fn));
-FST_MsgHandler FST_MkNullMsgHandler();
+Ft_Msg* FtStaticMsg_CastMsg(Ft_StaticMsg *msg);
 
-FST_BoolDef FST_IsMsgHandlerNull(FST_MsgHandler handler);
-FST_BoolDef FST_IsMsgHandlerNullP(FST_MsgHandler *handler);
+Ft_MsgHandler FtMsgHandler_Init(Ft_Str name, Ft_MsgCallback fn);
+Ft_MsgHandler FtMsgHandler_InitNull();
+
+Ft_Byte FST_IsMsgHandlerNull(Ft_MsgHandler handler);
+Ft_Byte FST_IsMsgHandlerNullP(Ft_MsgHandler *handler);
 
 #ifdef __cplusplus
 }

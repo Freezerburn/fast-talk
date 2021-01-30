@@ -3,66 +3,62 @@
 #include "FST_object.h"
 #include "FST_class.h"
 
-FST_Object* FST_MkObject(FST_Class *clazz) {
-    FST_Object *ret = FST_Alloc(sizeof(FST_Object));
-    ret->typ = FST_TypeObject;
-    ret->env = FST_MkEnv();
+Ft_Obj* FtObj_Init(Ft_Cls *clazz) {
+    Ft_Obj *ret = clazz->alloc(clazz);
     // Lazy init the handlers array only when someone actually adds a handler specifically for this object and isn't
     // just using the inherited messages from the class.
     ret->handlers.cap = 0;
     ret->handlers.len = 0;
     ret->clazz = clazz;
+    if (clazz->constructor != NULL) {
+        clazz->constructor(clazz, ret, NULL, 0);
+    }
     return ret;
 }
 
-void FST_DelObject(FST_Object *obj) {
-    FST_DelEnv(obj->env);
+void FtObj_Del(Ft_Obj *obj) {
     if (obj->handlers.cap > 0) {
-        FST_DelArray(&obj->handlers);
+        FtArr_Delete(&obj->handlers);
     }
-    FST_Dealloc(obj);
+    Ft_Free(obj);
 }
 
-void FST_ObjAddMsgHandler(FST_Object *obj, FST_Str name, FST_MsgCallbackDef(fn)) {
+Ft_Ptr FtObj_DefaultAlloc(struct Ft_Cls *clazz) {
+    return Ft_Alloc(sizeof(Ft_Obj));
+}
+
+void FtObj_AddHandler(Ft_Obj *obj, Ft_Str name, Ft_MSGCALLBACK(fn)) {
     if (obj->handlers.cap == 0) {
-        obj->handlers = FST_MkArray1(sizeof(FST_MsgHandler));
+        obj->handlers = FtArr_Init(sizeof(Ft_MsgHandler), 0);
     }
 
-    FST_MsgHandler handler;
+    Ft_MsgHandler handler;
     handler.name = name;
     handler.fn = fn;
-    FST_ArrPush(&obj->handlers, &handler);
+    FtArr_Append(&obj->handlers, 0, &handler);
 }
 
-FST_MsgHandler FST_ObjFindMsgHandler(FST_Object *obj, FST_Str name) {
-    for (FST_UintDef i = 0; i < obj->handlers.len; i++) {
-        FST_MsgHandler *handler = FST_ArrGet(&obj->handlers, i);
-        if (name.len == handler->name.len && strncmp(name.val, handler->name.val, name.len) == 0) {
+Ft_MsgHandler FtObj_FindHandler(Ft_Obj *obj, Ft_Str name) {
+    for (Ft_Uint i = 0; i < obj->handlers.len; i++) {
+        Ft_MsgHandler *handler = FtArr_Get(&obj->handlers, i);
+        if (FtStr_Eq(name, handler->name)) {
             return *handler;
         }
     }
 
-    FST_MsgHandler clsHandler = FST_ClsFindMsgHandler(obj->clazz, name);
+    Ft_MsgHandler clsHandler = FtCls_FindMsgHandler(obj->clazz, name);
     if (!FST_IsMsgHandlerNullP(&clsHandler)) {
         return clsHandler;
     }
 
-    return FST_MkNullMsgHandler();
+    return FtMsgHandler_InitNull();
 }
 
-FST_Object* FST_ObjHandleMsg(FST_Interp *interp, FST_Object *target, FST_Msg *msg) {
-    FST_MsgHandler handler = FST_ObjFindMsgHandler(target, msg->name);
+Ft_Obj* FtObj_Handle(Ft_Interp *interp, Ft_Obj *target, Ft_Msg *msg) {
+    Ft_MsgHandler handler = FtObj_FindHandler(target, msg->name);
     if (handler.fn == NULL) {
         return NULL;
     }
 
     return handler.fn(interp, target, msg);
-}
-
-FST_Object* FST_CastValToObj(FST_Val *val) {
-    return (FST_Object*) val;
-}
-
-FST_Val* FST_CastObjToVal(FST_Object *obj) {
-    return (FST_Val*) obj;
 }

@@ -3,37 +3,37 @@
 
 #include "FST_stdlib.h"
 
-static FST_ErrDef currentErrorCode = 0;
+static Ft_Err currentErrorCode = 0;
 
-FST_PtrDef FST_Alloc(FST_UintDef bytes) {
-    FST_PtrDef ret = malloc(bytes);
+Ft_Ptr Ft_Alloc(Ft_Uint b) {
+    Ft_Ptr ret = malloc(b);
 
 #if PARANOID_ERRORS
     if (ret == NULL) {
-        printf("[ERROR] [FST_Alloc] malloc failed to return a non-NULL pointer.\n");
-        FST_SetErr(FST_ERR_ALLOC);
+        printf("[ERROR] [Ft_Alloc] malloc failed to return a non-NULL pointer.\n");
+        FtErr_Set(FT_ERR_ALLOC);
     }
 #endif
 
     return ret;
 }
 
-void FST_Dealloc(FST_PtrDef ptr) {
-    free(ptr);
+void Ft_Free(Ft_Ptr p) {
+    free(p);
 }
 
-FST_ErrDef FST_ResetErr() {
-    FST_ErrDef last = currentErrorCode;
-    currentErrorCode = FST_NO_ERR;
+Ft_Err Ft_ClearError() {
+    Ft_Err last = currentErrorCode;
+    currentErrorCode = FT_NO_ERR;
     return last;
 }
 
-FST_ErrDef FST_SetErr(FST_ErrDef errValue) {
-    FST_ErrDef last = currentErrorCode;
-    currentErrorCode = errValue;
+Ft_Err FtErr_Set(Ft_Err e) {
+    Ft_Err last = currentErrorCode;
+    currentErrorCode = e;
     return last;
 }
 
-FST_ErrDef FST_GetErr() {
+Ft_Err Ft_GetError() {
     return currentErrorCode;
 }

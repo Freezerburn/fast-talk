@@ -9,14 +9,20 @@
 extern "C" {
 #endif
 
-typedef struct FST_Class {
-    FST_Str name;
-    FST_Array handlers;
-} FST_Class;
+typedef void (*Ft_Constructor)(struct Ft_Cls *, struct Ft_Obj *, struct Ft_Obj **, Ft_Uint);
+typedef Ft_Ptr (*Ft_ClassAlloc)(struct Ft_Cls *);
 
-FST_Class* FST_MkClass(struct FST_Interp *interp, FST_Str name);
-void FST_ClsAddMsgHandler(FST_Class *cls, FST_Str name, FST_MsgCallbackDef(fn));
-FST_MsgHandler FST_ClsFindMsgHandler(FST_Class *cls, FST_Str name);
+typedef struct Ft_Cls {
+    struct Ft_Cls *super;
+    Ft_Str name;
+    Ft_Arr handlers;
+    Ft_ClassAlloc alloc;
+    Ft_Constructor constructor;
+} Ft_Cls;
+
+Ft_Cls *FtCls_Init(struct Ft_Interp *interp, Ft_Str name);
+void FtCls_AddMsgHandler(Ft_Cls *cls, Ft_Str name, Ft_MSGCALLBACK(fn));
+Ft_MsgHandler FtCls_FindMsgHandler(Ft_Cls *cls, Ft_Str name);
 
 #ifdef __cplusplus
 }

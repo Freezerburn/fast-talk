@@ -4,22 +4,22 @@
 
 #include "FST_class.h"
 
-FST_Class* FST_MkClass(FST_Interp *interp, FST_Str name) {
-    FST_Class *existing = FST_InterpFindCls(interp, name);
+Ft_Cls* FtCls_Init(Ft_Interp *interp, Ft_Str name) {
+    Ft_Cls *existing = FST_InterpFindCls(interp, name);
     if (existing != NULL) {
         return existing;
     }
 
-    FST_Class *ret = FST_Alloc(sizeof(FST_Class));
+    Ft_Cls *ret = Ft_Alloc(sizeof(Ft_Cls));
 #if PARANOID_ERRORS
-    FST_ErrDef err = FST_GetErr();
+    Ft_Err err = Ft_GetError();
     if (err) {
         switch (err) {
-            case FST_ERR_ALLOC:
-                printf("[ERROR] [FST_MkClass] Alloc failed due to malloc returning null.\n");
+            case FT_ERR_ALLOC:
+                printf("[ERROR] [FtCls_Init] Alloc failed due to malloc returning null.\n");
                 break;
             default:
-                printf("[ERROR] [FST_MkClass] Alloc failed for unknown reasons.\n");
+                printf("[ERROR] [FtCls_Init] Alloc failed for unknown reasons.\n");
                 break;
         }
         return NULL;
@@ -27,48 +27,52 @@ FST_Class* FST_MkClass(FST_Interp *interp, FST_Str name) {
 #endif
 
     ret->name = name;
-    ret->handlers = FST_MkArray1(sizeof(FST_MsgHandler));
+    ret->handlers = FtArr_Init(sizeof(Ft_MsgHandler), 0);
+    ret->constructor = NULL;
     FST_InterpAddCls(interp, ret);
     return ret;
 }
 
-void FST_ClsAddMsgHandler(FST_Class *cls, FST_Str name, FST_MsgCallbackDef(fn)) {
-    FST_MsgHandler handler;
+void FtCls_AddMsgHandler(Ft_Cls *cls, Ft_Str name, Ft_MsgCallback fn) {
+    Ft_MsgHandler handler;
     handler.name = name;
     handler.fn = fn;
-    FST_ArrPush(&cls->handlers, &handler);
+    FtArr_Append(&cls->handlers, 0, &handler);
 
 #if PARANOID_ERRORS
-    FST_ErrDef err = FST_GetErr();
+    Ft_Err err = Ft_GetError();
     if (err) {
         switch (err) {
-            case FST_ERR_ARR_DEFAULT_SIZE:
-                printf("[ERROR] [FST_ClsAddMsgHandler] Unable to push handler into array: no default size set.\n");
+            case FT_ERR_ARR_DEFAULT_SIZE:
+                printf("[ERROR] [FtCls_AddMsgHandler] Unable to push handler into array: no default size set.\n");
                 break;
             default:
-                printf("[ERROR] [FST_ClsAddMsgHandler] Unable to push handler into array for unknown reasons.\n");
+                printf("[ERROR] [FtCls_AddMsgHandler] Unable to push handler into array for unknown reasons.\n");
                 break;
         }
     }
 #endif
 }
 
-FST_MsgHandler FST_ClsFindMsgHandler(FST_Class *cls, FST_Str name) {
-    for (FST_UintDef i = 0; i < cls->handlers.len; i++) {
-        FST_MsgHandler *handler = FST_ArrGet(&cls->handlers, i);
+Ft_MsgHandler FtCls_FindMsgHandler(Ft_Cls *cls, Ft_Str name) {
+    for (Ft_Uint i = 0; i < cls->handlers.len; i++) {
+        Ft_MsgHandler *handler = FtArr_Get(&cls->handlers, i);
 
 #if PARANOID_ERRORS
-        FST_ErrDef err = FST_GetErr();
+        Ft_Err err = Ft_GetError();
         if (err) {
             switch (err) {
-                case FST_ERR_ARR_DEFAULT_SIZE:
-                    printf("[ERROR] [FST_ClsAddMsgHandler] Unable to iterator over message handler array: index out of range.\n");
+                case FT_ERR_ARR_DEFAULT_SIZE:
+                    printf("[ERROR] [FtCls_AddMsgHandler] Unable to iterate over message handler array: index out of range.\n");
+                    break;
+                case FT_ERR_ARR_IDX_OUT_OF_RANGE:
+                    printf("[ERROR] [FtCls_AddMsgHandler] Idx %d out of range of handlers len %d.\n", i, cls->handlers.len);
                     break;
                 default:
-                    printf("[ERROR] [FST_ClsAddMsgHandler] Unable to iterator over message handler array for unknown reasons.\n");
+                    printf("[ERROR] [FtCls_AddMsgHandler] Unable to iterate over message handler array for unknown reason: %d.\n", err);
                     break;
             }
-            return FST_MkNullMsgHandler();
+            return FtMsgHandler_InitNull();
         }
 #endif
 
@@ -77,5 +81,5 @@ FST_MsgHandler FST_ClsFindMsgHandler(FST_Class *cls, FST_Str name) {
         }
     }
 
-    return FST_MkNullMsgHandler();
+    return FtMsgHandler_InitNull();
 }

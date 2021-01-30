@@ -9,21 +9,20 @@
 extern "C" {
 #endif
 
-typedef struct FST_Object {
-    enum FST_Type typ;
-    FST_Env *env;
-    FST_Array handlers;
-    struct FST_Class *clazz;
-} FST_Object;
+struct Ft_Obj {
+    struct Ft_Cls *clazz;
+    Ft_Arr handlers;
+};
+typedef struct Ft_Obj Ft_Obj;
 
-FST_Object* FST_MkObject(struct FST_Class *clazz);
-void FST_DelObject(FST_Object *obj);
+Ft_Obj* FtObj_Init(struct Ft_Cls *clazz);
+void FtObj_Del(Ft_Obj *obj);
 
-void FST_ObjAddMsgHandler(FST_Object *obj, FST_Str name, FST_MsgCallbackDef(fn));
-FST_MsgHandler FST_ObjFindMsgHandler(FST_Object *obj, FST_Str name);
-FST_Object* FST_ObjHandleMsg(FST_Interp *interp, FST_Object *target, FST_Msg *msg);
+Ft_Ptr FtObj_DefaultAlloc(struct Ft_Cls *clazz);
 
-struct FST_Val* FST_CastObjToVal(FST_Object *obj);
+void FtObj_AddHandler(Ft_Obj *obj, Ft_Str name, Ft_MSGCALLBACK(fn));
+Ft_MsgHandler FtObj_FindHandler(Ft_Obj *obj, Ft_Str name);
+Ft_Obj* FtObj_Handle(Ft_Interp *interp, Ft_Obj *target, Ft_Msg *msg);
 
 #ifdef __cplusplus
 }

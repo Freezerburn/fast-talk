@@ -6,47 +6,57 @@
 #define FASTTALK_FST_STDLIB_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 #define PARANOID_ERRORS 1
 
-#define FST_StrDef char*
-#define FST_PtrDef void*
-#define FST_ValDef uint8_t
-#define FST_UintDef uint32_t
-#define FST_FloatDef float
-#define FST_BoolDef uint8_t
-#define FST_ErrDef uint32_t
-#define FST_MsgCallbackDef(name) struct FST_Object* (*name)(struct FST_Interp*, struct FST_Object*, struct FST_Msg*)
+#define Ft_CStr char*
+#define Ft_Ptr void*
+#define FT_Int int64_t
+#define Ft_Uint uint32_t
+#define Ft_Float float
+#define Ft_Byte uint8_t
+#define Ft_Err uint32_t
+#define Ft_Size size_t
+#define Ft_MSGCALLBACK(name) struct Ft_Obj* (*name)(struct Ft_Interp*, struct Ft_Obj*, struct Ft_Msg*)
+#define Ft_CONSTRUCTOR(name) void (*name)(struct Ft_Cls*, struct Ft_Obj*, struct Ft_Obj**, Ft_Uint)
 
-#define FST_EnvDefaultLen 32
+#define Ft_InvalidSize UINT32_MAX
+#define Ft_EnvDefaultLen 32
 
-#define FST_NO_ERR 0
-#define FST_ERR_ARR_TOO_SMALL 1
-#define FST_ERR_ARR_DEFAULT_SIZE 2
-#define FST_ERR_ARR_IDX_OUT_OF_RANGE 3
-#define FST_ERR_ALLOC 4
+#define FT_NO_ERR 0
+#define FT_ERR_ARR_TOO_SMALL 1
+#define FT_ERR_ARR_DEFAULT_SIZE 2
+#define FT_ERR_ARR_IDX_OUT_OF_RANGE 3
+#define FT_ERR_ALLOC 4
+#define FT_ERR_ARR_SET_SIZE_MISMATCH 5
+#define FT_ERR_BAD_MSG 6
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-enum FST_Type {
-    FST_TypeUint,
-    FST_TypeFloat,
-    FST_TypeStr,
-    FST_TypeFn,
-    FST_TypeObject
-};
-
-FST_PtrDef FST_Alloc(FST_UintDef bytes);
-void FST_Dealloc(FST_PtrDef ptr);
-
-FST_ErrDef FST_ResetErr();
-FST_ErrDef FST_SetErr(FST_ErrDef errValue);
-FST_ErrDef FST_GetErr();
+#define FtObj_HEAD Ft_Obj obj_base;
 
 #ifdef __cplusplus
-}
+#define ft_c_open extern "C" {}
+#define fst_c_close }
+#else
+#define ft_c_open
+#define fst_c_close
 #endif
+
+ft_c_open
+typedef enum {
+    FtTy_Uint,
+    FtTy_Float,
+    FtTy_String,
+    FtTy_Fn,
+    FtTy_Object
+} Ft_Type;
+
+Ft_Ptr Ft_Alloc(Ft_Uint b);
+void Ft_Free(Ft_Ptr p);
+
+Ft_Err Ft_ClearError();
+Ft_Err FtErr_Set(Ft_Err e);
+Ft_Err Ft_GetError();
+fst_c_close
 
 #endif //FASTTALK_FST_STDLIB_H

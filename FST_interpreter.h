@@ -9,19 +9,19 @@
 extern "C" {
 #endif
 
-struct FST_Class;
+struct Ft_Cls;
 
-typedef struct FST_Interp {
+typedef struct Ft_Interp {
     FST_Env globalEnv;
-    FST_Array clazzes;
-} FST_Interp;
+    Ft_Arr clazzes;
+} Ft_Interp;
 
-FST_Interp* FST_MkInterp();
-void FST_DelInterp(FST_Interp *i);
-FST_Interp* FST_CpInterp(FST_Interp *i);
+Ft_Interp* FST_MkInterp();
+void FST_DelInterp(Ft_Interp *i);
+Ft_Interp* FST_CpInterp(Ft_Interp *i);
 
-void FST_InterpAddCls(FST_Interp *interp, struct FST_Class *cls);
-struct FST_Class* FST_InterpFindCls(FST_Interp *interp, FST_Str name);
+void FST_InterpAddCls(Ft_Interp *interp, struct Ft_Cls *cls);
+struct Ft_Cls* FST_InterpFindCls(Ft_Interp *interp, Ft_Str name);
 
 #ifdef __cplusplus
 }

@@ -4,19 +4,20 @@
 #include <stdio.h>
 
 #include "FST_msg.h"
+#include "FST_object.h"
 
-FST_Msg* FST_MkMsg(FST_Str name, ...) {
+Ft_Msg *FtMsg_Init(Ft_Str name, ...) {
     va_list args;
     va_start(args, name);
 
     size_t cap = 10;
-    FST_Msg *ret = FST_Alloc(sizeof(FST_Msg) + sizeof(FST_Val*) * cap);
+    Ft_Msg *ret = Ft_Alloc(sizeof(Ft_Msg) + sizeof(Ft_Obj *) * cap);
     ret->name = name;
     ret->len = 0;
-    memset(ret->args, 0, sizeof(FST_Val*) * cap);
+    memset(ret->args, 0, sizeof(Ft_Obj *) * cap);
 
-    FST_Val *arg;
-    while ((arg = va_arg(args, FST_Val*)) != NULL) {
+    Ft_Obj *arg;
+    while ((arg = va_arg(args, Ft_Obj*)) != NULL) {
         // Do the check at the start so that if we're at the end of the args after a new value is appended, we don't
         // expand the size of the message when there are no more values to place in the expanded message.
         // Unfortunately I don't believe there is any way to get any information about the arg list other than the
@@ -25,9 +26,9 @@ FST_Msg* FST_MkMsg(FST_Str name, ...) {
         // taken in most cases since >10 args is usually rare.
         if (ret->len == cap) {
             size_t newCap = cap * 2;
-            FST_Msg *newRet = FST_Alloc(sizeof(FST_Msg) + sizeof(FST_Val*) * newCap);
-            memcpy(newRet, ret, sizeof(FST_Msg) + sizeof(FST_Val*) * cap);
-            FST_Dealloc(ret);
+            Ft_Msg *newRet = Ft_Alloc(sizeof(Ft_Msg) + sizeof(Ft_Obj *) * newCap);
+            memcpy(newRet, ret, sizeof(Ft_Msg) + sizeof(Ft_Obj *) * cap);
+            Ft_Free(ret);
             ret = newRet;
             cap = newCap;
         }
@@ -38,15 +39,15 @@ FST_Msg* FST_MkMsg(FST_Str name, ...) {
     return ret;
 }
 
-FST_StaticMsg FST_MkMsgNonAlloc(FST_Str name, ...) {
+Ft_StaticMsg FtStaticMsg_Init(Ft_Str name, ...) {
     va_list args;
     va_start(args, name);
 
-    FST_UintDef len = 0;
-    FST_Val *arg;
-    FST_StaticMsg ret;
+    Ft_Uint len = 0;
+    Ft_Obj *arg;
+    Ft_StaticMsg ret;
     len = 0;
-    while ((arg = va_arg(args, FST_Val*)) != NULL) {
+    while ((arg = va_arg(args, Ft_Obj*)) != NULL) {
         if (len == 10) {
             printf("[CRITICAL] Attempted to allocate a static msg with more than 10 arguments.");
             exit(1);
@@ -59,29 +60,29 @@ FST_StaticMsg FST_MkMsgNonAlloc(FST_Str name, ...) {
     return ret;
 }
 
-FST_Msg* FST_CastStaticMsgToMsg(FST_StaticMsg *msg) {
-    return (FST_Msg*) msg;
+Ft_Msg *FtStaticMsg_CastMsg(Ft_StaticMsg *msg) {
+    return (Ft_Msg *) msg;
 }
 
-void FST_DelMsg(FST_Msg *msg) {
-    FST_Dealloc(msg);
+void FtMsg_Del(Ft_Msg *msg) {
+    Ft_Free(msg);
 }
 
-FST_MsgHandler FST_MkMsgHandler(FST_Str name, FST_MsgCallbackDef(fn)) {
-    FST_MsgHandler ret;
+Ft_MsgHandler FtMsgHandler_Init(Ft_Str name, Ft_MSGCALLBACK(fn)) {
+    Ft_MsgHandler ret;
     ret.name = name;
     ret.fn = fn;
     return ret;
 }
 
-FST_MsgHandler FST_MkNullMsgHandler() {
-    return FST_MkMsgHandler(FST_MkStr2("", 0), NULL);
+Ft_MsgHandler FtMsgHandler_InitNull() {
+    return FtMsgHandler_Init(FST_MkStr2("", 0), NULL);
 }
 
-FST_BoolDef FST_IsMsgHandlerNull(FST_MsgHandler handler) {
+Ft_Byte FST_IsMsgHandlerNull(Ft_MsgHandler handler) {
     return handler.fn == NULL;
 }
 
-FST_BoolDef FST_IsMsgHandlerNullP(FST_MsgHandler *handler) {
+Ft_Byte FST_IsMsgHandlerNullP(Ft_MsgHandler *handler) {
     return handler->fn == NULL;
 }

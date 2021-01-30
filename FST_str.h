@@ -8,12 +8,13 @@ extern "C" {
 #endif
 
 typedef struct _FST_Str {
-    FST_StrDef val;
-    FST_UintDef len;
-} FST_Str;
+    Ft_CStr val;
+    Ft_Uint len;
+} Ft_Str;
 
-FST_Str FST_MkStr2(FST_StrDef str, FST_UintDef len);
-FST_Str FST_MkStr(FST_StrDef str);
+Ft_Str FST_MkStr2(Ft_CStr str, Ft_Uint len);
+Ft_Str FtStr_Init(Ft_CStr str);
+Ft_Byte FtStr_Eq(Ft_Str l, Ft_Str r);
 
 #ifdef __cplusplus
 }

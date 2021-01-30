@@ -5,36 +5,27 @@
 
 #include "FST_stdlib.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+ft_c_open
+typedef struct {
+    Ft_Uint defaultValueSize;
+    Ft_Float growthFactor;
+    Ft_Uint len;
+    Ft_Uint cap;
+    Ft_Uint capBytes;
+    Ft_Uint *byteIdxs;
+    Ft_Ptr ptr;
+} Ft_Arr;
 
-    typedef struct _FST_Array {
-        FST_UintDef defaultValueSize;
-        float growthFactor;
-        FST_UintDef len;
-        FST_UintDef cap;
-        FST_UintDef capBytes;
-        FST_UintDef *byteIdxs;
-        void *ptr;
-    } FST_Array;
+Ft_Arr FtArr_Init(Ft_Uint valueSize, Ft_Uint initialCap);
+void FtArr_Delete(Ft_Arr *arr);
 
-    FST_Array FST_MkArray3(FST_UintDef valueSize, FST_UintDef initialCap, FST_FloatDef growthFactor);
-    FST_Array FST_MkArray2(FST_UintDef valueSize, FST_UintDef initialCap);
-    FST_Array FST_MkArray1(FST_UintDef valueSize);
-    FST_Array FST_MkArray();
-    void FST_DelArray(FST_Array *arr);
+void FtArr_Resize(Ft_Arr *arr, Ft_Uint bytes);
 
-    void FST_ArrResize(FST_Array *arr, FST_UintDef bytes);
+void FtArr_Append(Ft_Arr *arr, Ft_Uint valueSize, void *value);
+Ft_Ptr FtArr_Pop(Ft_Arr *arr);
 
-    void FST_ArrPush2(FST_Array *arr, FST_UintDef valueSize, FST_PtrDef value);
-    void FST_ArrPush(FST_Array *arr, FST_PtrDef value);
-    FST_PtrDef FST_ArrPop(FST_Array *arr);
-
-    FST_PtrDef FST_ArrGet(FST_Array *arr, FST_UintDef idx);
-
-#ifdef __cplusplus
-}
-#endif
+Ft_Ptr FtArr_Get(Ft_Arr *arr, Ft_Uint idx);
+void FtArr_Set(Ft_Arr *arr, Ft_Uint idx, Ft_Uint valueSize, void *value);
+ft_c_open
 
 #endif //FASTTALK_FST_ARRAY_H

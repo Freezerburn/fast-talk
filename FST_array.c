@@ -10,65 +10,62 @@
 #define DEFAULT_CAP 32
 #define DEFAULT_GROWTH_FACTOR 2.0f
 
-FST_Array FST_MkArray3(FST_UintDef valueSize, FST_UintDef initialCap, FST_FloatDef growthFactor) {
-    FST_Array ret;
+Ft_Arr FtArr_Init(Ft_Uint valueSize, Ft_Uint initialCap) {
+    if (valueSize == 0) {
+        valueSize = DEFAULT_VALUE_SIZE;
+    }
+    if (initialCap == 0) {
+        initialCap = DEFAULT_CAP;
+    }
+    Ft_Arr ret;
     ret.len = 0;
     ret.cap = initialCap;
-    ret.growthFactor = growthFactor;
+    ret.growthFactor = DEFAULT_GROWTH_FACTOR;
     ret.defaultValueSize = valueSize;
-    FST_PtrDef allArr;
-    if (valueSize == 0) {
-        ret.capBytes = DEFAULT_VALUE_SIZE * initialCap;
-    } else {
-        ret.capBytes = valueSize * initialCap;
-    }
-    allArr = FST_Alloc(sizeof(FST_UintDef) * (initialCap + 1) + ret.capBytes);
+    Ft_Ptr allArr;
+    ret.capBytes = valueSize * initialCap;
+    allArr = Ft_Alloc(sizeof(Ft_Uint) * (initialCap + 1) + ret.capBytes);
 #if PARANOID_ERRORS
-    FST_ErrDef err = FST_GetErr();
+    Ft_Err err = Ft_GetError();
     if (err) {
         switch (err) {
-            case FST_ERR_ALLOC:
-                printf("[ERROR] [FST_MkArray3] Alloc failed due to malloc returning null.\n");
+            case FT_ERR_ALLOC:
+                printf("[ERROR] [FtArr_Init] Alloc failed due to malloc returning null.\n");
                 break;
             default:
-                printf("[ERROR] [FST_MkArray3] Alloc failed for unknown reasons.\n");
+                printf("[ERROR] [FtArr_Init] Alloc failed for unknown reasons.\n");
                 break;
         }
-        memset(&ret, 0, sizeof(FST_Array));
+        memset(&ret, 0, sizeof(Ft_Arr));
         return ret;
     }
 #endif
 
     ret.byteIdxs = allArr;
-    ret.ptr = (uint8_t*)(allArr) + sizeof(FST_UintDef) * (initialCap + 1);
-    memset(allArr, 0, sizeof(FST_UintDef) * (initialCap + 1) + ret.capBytes);
+    ret.ptr = (uint8_t *) (allArr) + sizeof(Ft_Uint) * (initialCap + 1);
+    memset(allArr, 0, sizeof(Ft_Uint) * (initialCap + 1) + ret.capBytes);
     return ret;
 }
 
-FST_Array FST_MkArray2(FST_UintDef valueSize, FST_UintDef initialCap) {
-    return FST_MkArray3(valueSize, initialCap, DEFAULT_GROWTH_FACTOR);
+void FtArr_Delete(Ft_Arr *arr) {
+    Ft_Free(arr->byteIdxs);
+    arr->len = 0;
+    arr->cap = 0;
+    arr->capBytes = 0;
+    arr->growthFactor = 0;
+    arr->defaultValueSize = 0;
+    arr->byteIdxs = NULL;
+    arr->ptr = NULL;
 }
 
-FST_Array FST_MkArray1(FST_UintDef valueSize) {
-    return FST_MkArray3(valueSize, DEFAULT_CAP, DEFAULT_GROWTH_FACTOR);
-}
-
-FST_Array FST_MkArray() {
-    return FST_MkArray3(0, DEFAULT_CAP, DEFAULT_GROWTH_FACTOR);
-}
-
-void FST_DelArray(FST_Array *arr) {
-    FST_Dealloc(arr->byteIdxs);
-}
-
-void FST_ArrResize(FST_Array *arr, FST_UintDef bytes) {
-    FST_UintDef totalStoredBytes = arr->byteIdxs[arr->len];
+void FtArr_Resize(Ft_Arr *arr, Ft_Uint bytes) {
+    Ft_Uint totalStoredBytes = arr->byteIdxs[arr->len];
     if (bytes < totalStoredBytes) {
-        FST_SetErr(FST_ERR_ARR_TOO_SMALL);
+        FtErr_Set(FT_ERR_ARR_TOO_SMALL);
         return;
     }
 
-    FST_UintDef newSizesCap;
+    Ft_Uint newSizesCap;
     if (arr->defaultValueSize == 0) {
         // TODO: Calculate average size of values stored to use to get number of sizes to store
         newSizesCap = bytes / DEFAULT_VALUE_SIZE;
@@ -76,22 +73,29 @@ void FST_ArrResize(FST_Array *arr, FST_UintDef bytes) {
         newSizesCap = bytes / arr->defaultValueSize;
     }
 
-    FST_UintDef sizesBytes = sizeof(FST_UintDef) * (arr->cap + 1);
-    FST_UintDef totalBytes = sizesBytes + totalStoredBytes;
-    FST_UintDef newSizesBytes = sizeof(FST_UintDef) * (newSizesCap + 1);
-    FST_UintDef newTotalBytes = newSizesBytes + bytes;
+    Ft_Uint sizesBytes = sizeof(Ft_Uint) * (arr->cap + 1);
+    Ft_Uint totalBytes = sizesBytes + totalStoredBytes;
+    Ft_Uint newSizesBytes = sizeof(Ft_Uint) * (newSizesCap + 1);
+    Ft_Uint newTotalBytes = newSizesBytes + bytes;
 
-    uint8_t *newArr = FST_Alloc(newTotalBytes);
+    uint8_t *newArr = Ft_Alloc(newTotalBytes);
     memcpy(newArr, arr->byteIdxs, sizesBytes);
     memcpy(newArr + newSizesBytes, arr->ptr, totalBytes);
-    FST_Dealloc(arr->byteIdxs);
-    arr->byteIdxs = (FST_UintDef*) newArr;
+    Ft_Free(arr->byteIdxs);
+    arr->byteIdxs = (Ft_Uint *) newArr;
     arr->ptr = newArr + newSizesBytes;
     arr->cap = newSizesCap;
     arr->capBytes = bytes;
 }
 
-void FST_ArrPush2(FST_Array *arr, FST_UintDef valueSize, FST_PtrDef value) {
+void FtArr_Append(Ft_Arr *arr, Ft_Uint valueSize, void *value) {
+    if (valueSize == 0) {
+        if (arr->defaultValueSize == 0) {
+            FtErr_Set(FT_ERR_ARR_DEFAULT_SIZE);
+            return;
+        }
+        valueSize = arr->defaultValueSize;
+    }
     if (arr->len == 0) {
         uint8_t *arrPtr = arr->ptr;
         memcpy(arrPtr, value, valueSize);
@@ -101,9 +105,9 @@ void FST_ArrPush2(FST_Array *arr, FST_UintDef valueSize, FST_PtrDef value) {
         return;
     }
 
-    FST_UintDef totalBytes = arr->byteIdxs[arr->len];
+    Ft_Uint totalBytes = arr->byteIdxs[arr->len];
     if (arr->len == arr->cap || totalBytes + valueSize > arr->capBytes) {
-        FST_ArrResize(arr, (FST_UintDef)(arr->capBytes * arr->growthFactor));
+        FtArr_Resize(arr, (Ft_Uint) (arr->capBytes * arr->growthFactor));
     }
 
     uint8_t *arrPtr = arr->ptr;
@@ -112,30 +116,50 @@ void FST_ArrPush2(FST_Array *arr, FST_UintDef valueSize, FST_PtrDef value) {
     arr->byteIdxs[arr->len] = totalBytes + valueSize;
 }
 
-void FST_ArrPush(FST_Array *arr, FST_PtrDef value) {
-    if (arr->defaultValueSize == 0) {
-        FST_SetErr(FST_ERR_ARR_DEFAULT_SIZE);
-        return;
-    }
-    FST_ArrPush2(arr, arr->defaultValueSize, value);
-}
-
-FST_PtrDef FST_ArrPop(FST_Array *arr) {
+Ft_Ptr FtArr_Pop(Ft_Arr *arr) {
     arr->len--;
     uint8_t *arrPtr = arr->ptr;
-    FST_PtrDef ret = arrPtr + arr->byteIdxs[arr->len];
+    Ft_Ptr ret = arrPtr + arr->byteIdxs[arr->len];
     if (arr->len / 4 >= arr->cap) {
-        FST_ArrResize(arr, arr->capBytes / 2);
+        FtArr_Resize(arr, arr->capBytes / 2);
     }
     return ret;
 }
 
-FST_PtrDef FST_ArrGet(FST_Array *arr, FST_UintDef idx) {
+Ft_Ptr FtArr_Get(Ft_Arr *arr, Ft_Uint idx) {
     if (idx >= arr->len) {
-        FST_SetErr(FST_ERR_ARR_IDX_OUT_OF_RANGE);
+        FtErr_Set(FT_ERR_ARR_IDX_OUT_OF_RANGE);
         return NULL;
     }
 
     uint8_t *arrPtr = arr->ptr;
-    return (FST_PtrDef) (arrPtr + idx * arr->defaultValueSize);
+    return (Ft_Ptr) (arrPtr + arr->byteIdxs[idx]);
+}
+
+void FtArr_Set(Ft_Arr *arr, Ft_Uint idx, Ft_Uint valueSize, void *value) {
+    if (valueSize == 0) {
+        if (arr->defaultValueSize == 0) {
+            FtErr_Set(FT_ERR_ARR_DEFAULT_SIZE);
+            return;
+        }
+        valueSize = arr->defaultValueSize;
+    }
+    if (idx >= arr->len) {
+        FtErr_Set(FT_ERR_ARR_IDX_OUT_OF_RANGE);
+        return;
+    }
+
+    Ft_Uint totalBytes = arr->byteIdxs[idx];
+    Ft_Uint nextOffset;
+    if (idx + 1 < arr->cap) {
+        nextOffset = arr->byteIdxs[idx + 1];
+    } else {
+        nextOffset = arr->capBytes;
+    }
+    if (nextOffset - totalBytes != valueSize) {
+        FtErr_Set(FT_ERR_ARR_SET_SIZE_MISMATCH);
+        return;
+    }
+    uint8_t *arrPtr = arr->ptr;
+    memcpy(arrPtr + totalBytes, value, valueSize);
 }

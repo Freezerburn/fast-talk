@@ -3,38 +3,28 @@
 
 #include "FST_array.h"
 #include "FST_str.h"
-#include "FST_val.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct _FST_Env {
-    struct _FST_Env *parent;
-    FST_Array values;
+typedef struct FST_Env {
+    struct FST_Env *parent;
+    Ft_Arr values;
 } FST_Env;
 
-typedef struct _FST_EnvVal {
-    FST_Str name;
-    FST_Val val;
-} FST_EnvVal;
+typedef struct Ft_EnvVal {
+    Ft_Str name;
+    struct Ft_Obj *val;
+} Ft_EnvVal;
 
-FST_Env* FST_MkEnv();
-FST_Env* FST_MkEnv1(FST_UintDef len);
-FST_Env* FST_MkEnv2(FST_Env *parent, FST_UintDef len);
-void FST_InitEnv(FST_Env *env, FST_Env *parent, FST_UintDef len);
-void FST_DelEnv(FST_Env *env);
+FST_Env FtEnv_Init(FST_Env *parent, Ft_Uint len);
+FST_Env FtEnv_InitChild(FST_Env *parent);
+void FtEnv_Del(FST_Env *env);
 
-FST_Env* FST_EnvChild(FST_Env *parent);
+void FtEnv_Set(FST_Env *env, struct Ft_Obj *obj, Ft_Str name);
 
-void FST_EnvAppend(FST_Env *env, FST_EnvVal *val);
-void FST_EnvAppend3(FST_Env *env, FST_Str name, FST_PtrDef v, enum FST_Type typ);
-
-FST_EnvVal* FST_EnvFindValByName(FST_Env *env, FST_Str name);
-
-FST_EnvVal* FST_MkEnvVal(FST_Str name, FST_PtrDef v, enum FST_Type typ);
-void FST_InitEnvVal(FST_EnvVal *val, FST_Str name, FST_PtrDef v, enum FST_Type typ);
-void FST_DelEnvVal(FST_EnvVal *e);
+Ft_EnvVal* FtEnv_Find(FST_Env *env, Ft_Str name);
 
 #ifdef __cplusplus
 }
