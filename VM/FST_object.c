@@ -27,7 +27,7 @@ Ft_Ptr FtObj_DefaultAlloc(struct Ft_Cls *clazz) {
     return Ft_Alloc(sizeof(Ft_Obj));
 }
 
-void FtObj_AddHandler(Ft_Obj *obj, Ft_Str name, Ft_MSGCALLBACK(fn)) {
+void FtObj_AddHandler(Ft_Obj *obj, Ft_Str name, Ft_MsgCallback fn) {
     if (obj->handlers.cap == 0) {
         obj->handlers = FtArr_Init(sizeof(Ft_MsgHandler), 0);
     }
@@ -35,7 +35,7 @@ void FtObj_AddHandler(Ft_Obj *obj, Ft_Str name, Ft_MSGCALLBACK(fn)) {
     Ft_MsgHandler handler;
     handler.name = name;
     handler.fn = fn;
-    FtArr_Append(&obj->handlers, 0, &handler);
+    FtArr_Append(&obj->handlers, &handler);
 }
 
 Ft_MsgHandler FtObj_FindHandler(Ft_Obj *obj, Ft_Str name) {

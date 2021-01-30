@@ -21,7 +21,7 @@ typedef struct Ft_Cls {
 } Ft_Cls;
 
 Ft_Cls *FtCls_Init(struct Ft_Interp *interp, Ft_Str name);
-void FtCls_AddMsgHandler(Ft_Cls *cls, Ft_Str name, Ft_MSGCALLBACK(fn));
+void FtCls_AddMsgHandler(Ft_Cls *cls, Ft_Str name, Ft_MsgCallback fn);
 Ft_MsgHandler FtCls_FindMsgHandler(Ft_Cls *cls, Ft_Str name);
 
 #ifdef __cplusplus

@@ -3,9 +3,9 @@
 //
 
 #include "Ft_IntObj.h"
-#include "../FST_class.h"
-#include "../FST_object.h"
-#include "../FST_msg.h"
+#include "../VM/FST_class.h"
+#include "../VM/FST_object.h"
+#include "../VM/FST_msg.h"
 
 static Ft_Cls *intObjCls = NULL;
 

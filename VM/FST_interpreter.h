@@ -12,7 +12,7 @@ extern "C" {
 struct Ft_Cls;
 
 typedef struct Ft_Interp {
-    FST_Env globalEnv;
+    Ft_Env globalEnv;
     Ft_Arr clazzes;
 } Ft_Interp;
 

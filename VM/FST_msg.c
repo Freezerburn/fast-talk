@@ -68,7 +68,7 @@ void FtMsg_Del(Ft_Msg *msg) {
     Ft_Free(msg);
 }
 
-Ft_MsgHandler FtMsgHandler_Init(Ft_Str name, Ft_MSGCALLBACK(fn)) {
+Ft_MsgHandler FtMsgHandler_Init(Ft_Str name, Ft_MsgCallback fn) {
     Ft_MsgHandler ret;
     ret.name = name;
     ret.fn = fn;

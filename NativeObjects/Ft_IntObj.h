@@ -5,10 +5,10 @@
 #ifndef FASTTALK_FT_INTOBJ_H
 #define FASTTALK_FT_INTOBJ_H
 
-#include "../FST_stdlib.h"
-#include "../FST_interpreter.h"
-#include "../FST_array.h"
-#include "../FST_object.h"
+#include "../VM/FST_stdlib.h"
+#include "../VM/FST_interpreter.h"
+#include "../VM/FST_array.h"
+#include "../VM/FST_object.h"
 
 struct Ft_IntObj {
     FtObj_HEAD

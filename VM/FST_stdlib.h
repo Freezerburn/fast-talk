@@ -18,8 +18,6 @@
 #define Ft_Byte uint8_t
 #define Ft_Err uint32_t
 #define Ft_Size size_t
-#define Ft_MSGCALLBACK(name) struct Ft_Obj* (*name)(struct Ft_Interp*, struct Ft_Obj*, struct Ft_Msg*)
-#define Ft_CONSTRUCTOR(name) void (*name)(struct Ft_Cls*, struct Ft_Obj*, struct Ft_Obj**, Ft_Uint)
 
 #define Ft_InvalidSize UINT32_MAX
 #define Ft_EnvDefaultLen 32
@@ -31,6 +29,7 @@
 #define FT_ERR_ALLOC 4
 #define FT_ERR_ARR_SET_SIZE_MISMATCH 5
 #define FT_ERR_BAD_MSG 6
+#define FT_ERR_ARR_BAD_SIZE 7
 
 #define FtObj_HEAD Ft_Obj obj_base;
 

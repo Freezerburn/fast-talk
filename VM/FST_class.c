@@ -37,7 +37,7 @@ void FtCls_AddMsgHandler(Ft_Cls *cls, Ft_Str name, Ft_MsgCallback fn) {
     Ft_MsgHandler handler;
     handler.name = name;
     handler.fn = fn;
-    FtArr_Append(&cls->handlers, 0, &handler);
+    FtArr_Append(&cls->handlers, &handler);
 
 #if PARANOID_ERRORS
     Ft_Err err = Ft_GetError();

@@ -14,7 +14,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 add_executable(FastTalk
         CMakeLists.txt
-        main.c FST_array.h FST_array.c FST_stdlib.c FST_stdlib.h FST_object.c FST_object.h FST_env.c FST_env.h FST_class.c FST_class.h FST_str.c FST_str.h FST_interpreter.c FST_interpreter.h FST.h FST_msg.c FST_msg.h
+        main.c VM/FST_array.h VM/FST_array.c VM/FST_stdlib.c VM/FST_stdlib.h VM/FST_object.c VM/FST_object.h VM/FST_env.c VM/FST_env.h VM/FST_class.c VM/FST_class.h VM/FST_str.c VM/FST_str.h VM/FST_interpreter.c VM/FST_interpreter.h FST.h VM/FST_msg.c VM/FST_msg.h
         NativeObjects/Ft_IntObj.c NativeObjects/Ft_IntObj.h)
 
 #INCLUDE(FindPkgConfig)

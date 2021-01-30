@@ -24,7 +24,7 @@ void FST_DelInterp(Ft_Interp *i) {
 }
 
 void FST_InterpAddCls(Ft_Interp *interp, Ft_Cls *cls) {
-    FtArr_Append(&interp->clazzes, 0, cls);
+    FtArr_Append(&interp->clazzes, cls);
 }
 
 Ft_Cls *FST_InterpFindCls(Ft_Interp *interp, Ft_Str name) {

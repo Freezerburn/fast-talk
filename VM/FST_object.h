@@ -20,7 +20,7 @@ void FtObj_Del(Ft_Obj *obj);
 
 Ft_Ptr FtObj_DefaultAlloc(struct Ft_Cls *clazz);
 
-void FtObj_AddHandler(Ft_Obj *obj, Ft_Str name, Ft_MSGCALLBACK(fn));
+void FtObj_AddHandler(Ft_Obj *obj, Ft_Str name, Ft_MsgCallback fn);
 Ft_MsgHandler FtObj_FindHandler(Ft_Obj *obj, Ft_Str name);
 Ft_Obj* FtObj_Handle(Ft_Interp *interp, Ft_Obj *target, Ft_Msg *msg);
 
