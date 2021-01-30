@@ -14,6 +14,7 @@ struct Ft_Cls;
 typedef struct Ft_Interp {
     Ft_Env globalEnv;
     Ft_Arr clazzes;
+    struct Ft_Obj *nilObj;
 } Ft_Interp;
 
 Ft_Interp* FST_MkInterp();
@@ -22,6 +23,8 @@ Ft_Interp* FST_CpInterp(Ft_Interp *i);
 
 void FST_InterpAddCls(Ft_Interp *interp, struct Ft_Cls *cls);
 struct Ft_Cls* FST_InterpFindCls(Ft_Interp *interp, Ft_Str name);
+
+#define Ft_RETURN_NIL(interp) do { _FtObj_INCREF(interp->nilObj); return interp->nilObj; } while(0)
 
 #ifdef __cplusplus
 }

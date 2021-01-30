@@ -3,11 +3,14 @@
 //
 
 #include "Ft_IntObj.h"
+
+#include <stdio.h>
+
 #include "../VM/FST_class.h"
 #include "../VM/FST_object.h"
 #include "../VM/FST_msg.h"
 
-static Ft_Cls *intObjCls = NULL;
+static Ft_Cls* intObjCls = NULL;
 
 static Ft_Ptr intobj_alloc(Ft_Cls *clazz) {
     return Ft_Alloc(sizeof(Ft_IntObj));
@@ -17,7 +20,12 @@ static void intobj_constructor(struct Ft_Cls *clazz, struct Ft_IntObj *self, str
     self->value = 0;
 }
 
-static Ft_Obj *handle_plus(Ft_Interp *interp, Ft_IntObj *self, Ft_Msg *msg) {
+static Ft_Obj* handle_print(Ft_Interp* interp, Ft_IntObj* self, Ft_Msg* msg) {
+    printf("<Uint: %d>\n", self->value);
+    Ft_RETURN_NIL(interp);
+}
+
+static Ft_Obj* handle_plus(Ft_Interp* interp, Ft_IntObj* self, Ft_Msg* msg) {
     if (msg->len == 0) {
         FtErr_Set(FT_ERR_BAD_MSG);
         return NULL;
@@ -36,6 +44,7 @@ void FtModuleInit_IntObj(Ft_Interp *interp) {
     intObjCls->alloc = intobj_alloc;
     intObjCls->constructor = (Ft_Constructor) intobj_constructor;
     FtCls_AddMsgHandler(intObjCls, FtStr_Init("+"), (Ft_MsgCallback) handle_plus);
+    FtCls_AddMsgHandler(intObjCls, FtStr_Init("print"), (Ft_MsgCallback) handle_print);
 }
 
 Ft_Obj *FtIntObj_Init(Ft_Uint value) {

@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "FST_class.h"
+#include "FST_object.h"
 
 Ft_Cls* FtCls_Init(Ft_Interp *interp, Ft_Str name) {
     Ft_Cls *existing = FST_InterpFindCls(interp, name);
@@ -26,8 +27,10 @@ Ft_Cls* FtCls_Init(Ft_Interp *interp, Ft_Str name) {
     }
 #endif
 
+    ret->super = NULL;
     ret->name = name;
     ret->handlers = FtArr_Init(sizeof(Ft_MsgHandler), 0);
+    ret->alloc = FtObj_DefaultAlloc;
     ret->constructor = NULL;
     FST_InterpAddCls(interp, ret);
     return ret;

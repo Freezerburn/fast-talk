@@ -39,7 +39,11 @@ int main() {
         Ft_Obj *toAdd = FtIntObj_Init(10);
         Ft_StaticMsg plusMsg = FtStaticMsg_Init(FtStr_Init("+"), toAdd, NULL);
         Ft_Obj *result = FtObj_Handle(interp, testInt, FtStaticMsg_CastMsg(&plusMsg));
-        FtObj_Del(result);
+
+        Ft_StaticMsg printMsg = FtStaticMsg_Init(FtStr_Init("print"), NULL);
+        Ft_Obj* printResult = FtObj_Handle(interp, result, FtStaticMsg_CastMsg(&printMsg));
+        FtObj_DECREF(result);
+        FtObj_DECREF(printResult);
 
 #ifdef __MACH__
         clock = mach_absolute_time() - initclock;

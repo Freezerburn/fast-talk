@@ -3,13 +3,14 @@
 #include "FST_object.h"
 #include "FST_class.h"
 
-Ft_Obj* FtObj_Init(Ft_Cls *clazz) {
+Ft_Obj *FtObj_Init(Ft_Cls *clazz) {
     Ft_Obj *ret = clazz->alloc(clazz);
     // Lazy init the handlers array only when someone actually adds a handler specifically for this object and isn't
     // just using the inherited messages from the class.
     ret->handlers.cap = 0;
     ret->handlers.len = 0;
     ret->clazz = clazz;
+    ret->refCnt = 1;
     if (clazz->constructor != NULL) {
         clazz->constructor(clazz, ret, NULL, 0);
     }
@@ -21,6 +22,17 @@ void FtObj_Del(Ft_Obj *obj) {
         FtArr_Delete(&obj->handlers);
     }
     Ft_Free(obj);
+}
+
+void _FtObj_INCREF(Ft_Obj *o) {
+    o->refCnt++;
+}
+
+void _FtObj_DECREF(Ft_Obj *o) {
+    o->refCnt--;
+    if (o->refCnt == 0 && !FtStr_Eq(FtStr_Init("Nil"), o->clazz->name)) {
+        FtObj_Del(o);
+    }
 }
 
 Ft_Ptr FtObj_DefaultAlloc(struct Ft_Cls *clazz) {
@@ -54,7 +66,7 @@ Ft_MsgHandler FtObj_FindHandler(Ft_Obj *obj, Ft_Str name) {
     return FtMsgHandler_InitNull();
 }
 
-Ft_Obj* FtObj_Handle(Ft_Interp *interp, Ft_Obj *target, Ft_Msg *msg) {
+Ft_Obj *FtObj_Handle(Ft_Interp *interp, Ft_Obj *target, Ft_Msg *msg) {
     Ft_MsgHandler handler = FtObj_FindHandler(target, msg->name);
     if (handler.fn == NULL) {
         return NULL;
