@@ -28,6 +28,7 @@ void _FtObj_INCREF(Ft_Obj *o) {
 void _FtObj_DECREF(Ft_Obj *o) {
     o->refCnt--;
     if (o->refCnt == 0) {
+        o->handlers.len = 0;
         FtMemPool_Free(o->clazz->pool, o, o->poolIdx);
     }
 }
