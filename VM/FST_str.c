@@ -6,7 +6,7 @@
 
 #include "FST_str.h"
 
-Ft_Str FST_MkStr2(Ft_CStr str, Ft_Uint len) {
+Ft_Str FtStr_InitLen(Ft_CStr str, Ft_Uint len) {
     Ft_Str ret;
     ret.val = str;
     ret.len = len;
@@ -14,7 +14,7 @@ Ft_Str FST_MkStr2(Ft_CStr str, Ft_Uint len) {
 }
 
 Ft_Str FtStr_Init(Ft_CStr str) {
-    return FST_MkStr2(str, strlen(str));
+    return FtStr_InitLen(str, strlen(str));
 }
 
 Ft_Byte FtStr_Eq(Ft_Str l, Ft_Str r) {

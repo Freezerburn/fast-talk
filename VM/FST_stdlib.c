@@ -29,6 +29,7 @@ Ft_Err Ft_ClearError() {
 }
 
 Ft_Err FtErr_Set(Ft_Err e) {
+    printf("err set: %d\n", e);
     Ft_Err last = currentErrorCode;
     currentErrorCode = e;
     return last;

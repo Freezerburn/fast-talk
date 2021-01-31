@@ -12,7 +12,7 @@ typedef struct _FST_Str {
     Ft_Uint len;
 } Ft_Str;
 
-Ft_Str FST_MkStr2(Ft_CStr str, Ft_Uint len);
+Ft_Str FtStr_InitLen(Ft_CStr str, Ft_Uint len);
 Ft_Str FtStr_Init(Ft_CStr str);
 Ft_Byte FtStr_Eq(Ft_Str l, Ft_Str r);
 

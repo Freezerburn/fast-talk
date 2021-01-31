@@ -20,7 +20,8 @@ void FtArr_Delete(Ft_Arr *arr);
 void FtArr_Resize(Ft_Arr *arr, Ft_Uint newCap);
 
 void FtArr_Append(Ft_Arr *arr, void *value);
-Ft_Ptr FtArr_Pop(Ft_Arr *arr);
+Ft_Ptr FtArr_AppendZeroed(Ft_Arr *arr);
+void FtArr_Pop(Ft_Arr *arr, Ft_Ptr dest);
 
 Ft_Ptr FtArr_Get(Ft_Arr *arr, Ft_Uint idx);
 void FtArr_Set(Ft_Arr *arr, Ft_Uint idx, void *value);

@@ -2,26 +2,23 @@
 
 #include "FST_object.h"
 #include "FST_class.h"
+#include "Ft_MemPool.h"
 
 Ft_Obj *FtObj_Init(Ft_Cls *clazz) {
-    Ft_Obj *ret = clazz->alloc(clazz);
-    // Lazy init the handlers array only when someone actually adds a handler specifically for this object and isn't
-    // just using the inherited messages from the class.
-    ret->handlers.cap = 0;
-    ret->handlers.len = 0;
+    Ft_Uint poolIdx;
+    Ft_Obj *ret = FtMemPool_Alloc(clazz->pool, &poolIdx);
+    // Init the handlers array, but don't allocate any capacity until a handler for this specific object is actually
+    // created. It's probably more uncommon than not to have object-specific handler overrides.
+    if (ret->handlers.ptr == NULL) {
+        ret->handlers = FtArr_Init(sizeof(Ft_MsgHandler), 0);
+    }
     ret->clazz = clazz;
     ret->refCnt = 1;
+    ret->poolIdx = poolIdx;
     if (clazz->constructor != NULL) {
         clazz->constructor(clazz, ret, NULL, 0);
     }
     return ret;
-}
-
-void FtObj_Del(Ft_Obj *obj) {
-    if (obj->handlers.cap > 0) {
-        FtArr_Delete(&obj->handlers);
-    }
-    Ft_Free(obj);
 }
 
 void _FtObj_INCREF(Ft_Obj *o) {
@@ -30,24 +27,15 @@ void _FtObj_INCREF(Ft_Obj *o) {
 
 void _FtObj_DECREF(Ft_Obj *o) {
     o->refCnt--;
-    if (o->refCnt == 0 && !FtStr_Eq(FtStr_Init("Nil"), o->clazz->name)) {
-        FtObj_Del(o);
+    if (o->refCnt == 0) {
+        FtMemPool_Free(o->clazz->pool, o, o->poolIdx);
     }
-}
-
-Ft_Ptr FtObj_DefaultAlloc(struct Ft_Cls *clazz) {
-    return Ft_Alloc(sizeof(Ft_Obj));
 }
 
 void FtObj_AddHandler(Ft_Obj *obj, Ft_Str name, Ft_MsgCallback fn) {
-    if (obj->handlers.cap == 0) {
-        obj->handlers = FtArr_Init(sizeof(Ft_MsgHandler), 0);
-    }
-
-    Ft_MsgHandler handler;
-    handler.name = name;
-    handler.fn = fn;
-    FtArr_Append(&obj->handlers, &handler);
+    Ft_MsgHandler* handler = FtArr_AppendZeroed(&obj->handlers);
+    handler->name = name;
+    handler->fn = fn;
 }
 
 Ft_MsgHandler FtObj_FindHandler(Ft_Obj *obj, Ft_Str name) {

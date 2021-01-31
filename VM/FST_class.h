@@ -16,11 +16,14 @@ typedef struct Ft_Cls {
     struct Ft_Cls *super;
     Ft_Str name;
     Ft_Arr handlers;
-    Ft_ClassAlloc alloc;
     Ft_Constructor constructor;
+    Ft_Uint baseSize;
+    short native;
+    struct Ft_MemPool* pool;
 } Ft_Cls;
 
-Ft_Cls *FtCls_Init(struct Ft_Interp *interp, Ft_Str name);
+Ft_Cls *FtCls_Alloc(Ft_Interp *interp, Ft_Str name, Ft_Uint native);
+void FtCls_Init(Ft_Interp* interp, Ft_Cls* clazz);
 void FtCls_AddMsgHandler(Ft_Cls *cls, Ft_Str name, Ft_MsgCallback fn);
 Ft_MsgHandler FtCls_FindMsgHandler(Ft_Cls *cls, Ft_Str name);
 

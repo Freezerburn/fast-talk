@@ -21,39 +21,84 @@ int main() {
     uint64_t initclock = mach_absolute_time();
 #endif
 
-    Ft_Interp *interp = FST_MkInterp();
+    Ft_Interp *interp = FtInterp_Init();
     FtModuleInit_IntObj(interp);
 
     Ft_Obj *testInt = FtIntObj_Init(10);
 
+    int runs = 10000000;
 #ifdef __MACH__
     uint64_t total = 0;
+    uint64_t avgCalcTime = 0;
+    for (int i = 0; i < runs; i++) {
+        uint64_t clockBefore = mach_absolute_time();
+        uint64_t clockAfter = mach_absolute_time();
+        uint64_t nanoBefore = (clockBefore - initclock) * timebaseRatio;
+        uint64_t nanoAfter = (clockAfter - initclock) * timebaseRatio;
+        total += (nanoAfter - nanoBefore);
+    }
+    avgCalcTime = total / runs;
+    printf("avg nanos to get a clock time diff: %llu\n", avgCalcTime);
+    total = 0;
 #endif
 
-    int runs = 10000000;
     for (int i = 0; i < runs; i++) {
 #ifdef __MACH__
         uint64_t clock = mach_absolute_time() - initclock;
         uint64_t nanoBefore = clock * timebaseRatio;
 #endif
         Ft_Obj *toAdd = FtIntObj_Init(10);
-        Ft_StaticMsg plusMsg = FtStaticMsg_Init(FtStr_Init("+"), toAdd, NULL);
-        Ft_Obj *result = FtObj_Handle(interp, testInt, FtStaticMsg_CastMsg(&plusMsg));
-
-        Ft_StaticMsg printMsg = FtStaticMsg_Init(FtStr_Init("print"), NULL);
-        Ft_Obj* printResult = FtObj_Handle(interp, result, FtStaticMsg_CastMsg(&printMsg));
-        FtObj_DECREF(result);
-        FtObj_DECREF(printResult);
 
 #ifdef __MACH__
         clock = mach_absolute_time() - initclock;
         uint64_t nanoAfter = clock * timebaseRatio;
         total += (nanoAfter - nanoBefore);
 #endif
+        FtObj_DECREF(toAdd);
+    }
+#ifdef __MACH__
+    printf("%llu nanos (intobj init)\n", total / runs);
+    total = 0;
+#endif
+
+    for (int i = 0; i < runs; i++) {
+        Ft_Obj *toAdd = FtIntObj_Init(10);
+#ifdef __MACH__
+        uint64_t clock = mach_absolute_time() - initclock;
+        uint64_t nanoBefore = clock * timebaseRatio;
+#endif
+        FtObj_DECREF(toAdd);
+#ifdef __MACH__
+        clock = mach_absolute_time() - initclock;
+        uint64_t nanoAfter = clock * timebaseRatio;
+        total += (nanoAfter - nanoBefore);
+#endif
+    }
+#ifdef __MACH__
+    printf("%llu nanos (intobj decref)\n", total / runs);
+    total = 0;
+#endif
+
+    for (int i = 0; i < runs; i++) {
+#ifdef __MACH__
+        uint64_t clockBefore = mach_absolute_time();
+#endif
+        Ft_Obj *toAdd = FtIntObj_Init(10);
+        Ft_StaticMsg plusMsg = FtStaticMsg_Init(FtStr_Init("+"), toAdd, NULL);
+        Ft_Obj *result = FtObj_Handle(interp, testInt, FtStaticMsg_CastMsg(&plusMsg));
+        FtObj_DECREF(toAdd);
+        FtObj_DECREF(result);
+
+#ifdef __MACH__
+        uint64_t clockAfter = mach_absolute_time();
+        uint64_t nanoBefore = (clockBefore - initclock) * timebaseRatio;
+        uint64_t nanoAfter = (clockAfter - initclock) * timebaseRatio;
+        total += (nanoAfter - nanoBefore);
+#endif
     }
 
 #ifdef __MACH__
-    printf("%llu nanos\n", total / runs);
+    printf("%llu nanos (full int create and addition cycle)\n", total / runs);
 #endif
 
     return 0;

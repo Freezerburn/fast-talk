@@ -13,13 +13,11 @@ struct Ft_Obj {
     struct Ft_Cls *clazz;
     Ft_Arr handlers;
     Ft_Uint refCnt;
+    Ft_Uint poolIdx;
 };
 typedef struct Ft_Obj Ft_Obj;
 
 Ft_Obj* FtObj_Init(struct Ft_Cls *clazz);
-void FtObj_Del(Ft_Obj *obj);
-
-Ft_Ptr FtObj_DefaultAlloc(struct Ft_Cls *clazz);
 
 void FtObj_AddHandler(Ft_Obj *obj, Ft_Str name, Ft_MsgCallback fn);
 Ft_MsgHandler FtObj_FindHandler(Ft_Obj *obj, Ft_Str name);

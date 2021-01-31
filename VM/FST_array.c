@@ -17,7 +17,7 @@ Ft_Arr FtArr_Init(Ft_Uint valueSize, Ft_Uint initialCap) {
         memset(&ret, 0, sizeof(Ft_Arr));
         return ret;
     }
-    if (initialCap == 0) {
+    if (initialCap == Ft_InvalidSize) {
         initialCap = DEFAULT_CAP;
     }
     Ft_Arr ret;
@@ -25,6 +25,10 @@ Ft_Arr FtArr_Init(Ft_Uint valueSize, Ft_Uint initialCap) {
     ret.len = 0;
     ret.cap = initialCap;
     ret.growthFactor = DEFAULT_GROWTH_FACTOR;
+    if (initialCap == 0) {
+        ret.ptr = NULL;
+        return ret;
+    }
     ret.ptr = Ft_Alloc(valueSize * initialCap);
 #if PARANOID_ERRORS
     Ft_Err err = Ft_GetError();
@@ -64,12 +68,16 @@ void FtArr_Resize(Ft_Arr *arr, Ft_Uint newCap) {
     Ft_Uint newBytes = newCap * arr->valueSize;
     uint8_t *newArr = Ft_Alloc(newBytes);
     memcpy(newArr, arr->ptr, newBytes);
+    // TODO: Zero init new bytes. Then remove memset from AppendZeroed.
     Ft_Free(arr->ptr);
     arr->ptr = newArr;
     arr->cap = newCap;
 }
 
 void FtArr_Append(Ft_Arr *arr, void *value) {
+    if (arr->len == arr->cap) {
+        FtArr_Resize(arr, (Ft_Uint) (arr->len * arr->growthFactor));
+    }
     if (arr->len == 0) {
         uint8_t *arrPtr = arr->ptr;
         memcpy(arrPtr, value, arr->valueSize);
@@ -78,23 +86,29 @@ void FtArr_Append(Ft_Arr *arr, void *value) {
     }
 
     Ft_Uint totalBytes = arr->len * arr->valueSize;
-    if (arr->len == arr->cap) {
-        FtArr_Resize(arr, (Ft_Uint) (arr->len * arr->growthFactor));
-    }
-
     uint8_t *arrPtr = arr->ptr;
     memcpy(arrPtr + totalBytes, value, arr->valueSize);
     arr->len++;
 }
 
-Ft_Ptr FtArr_Pop(Ft_Arr *arr) {
+Ft_Ptr FtArr_AppendZeroed(Ft_Arr *arr) {
+    if (arr->len == arr->cap) {
+        FtArr_Resize(arr, (Ft_Uint) (arr->len * arr->growthFactor));
+    }
+    Ft_Ptr ret = arr->ptr + (arr->len * arr->valueSize);
+    arr->len++;
+    memset(ret, 0, arr->valueSize);
+    return ret;
+}
+
+void FtArr_Pop(Ft_Arr *arr, Ft_Ptr dest) {
     arr->len--;
-    uint8_t *arrPtr = arr->ptr;
-    Ft_Ptr ret = arrPtr + arr->len * arr->valueSize;
+    if (dest != NULL) {
+        memcpy(dest, arr->ptr + (arr->len * arr->valueSize), arr->valueSize);
+    }
     if (arr->len / 4 >= arr->cap) {
         FtArr_Resize(arr, arr->len / 2);
     }
-    return ret;
 }
 
 Ft_Ptr FtArr_Get(Ft_Arr *arr, Ft_Uint idx) {

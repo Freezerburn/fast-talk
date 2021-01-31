@@ -30,15 +30,16 @@
 #define FT_ERR_ARR_SET_SIZE_MISMATCH 5
 #define FT_ERR_BAD_MSG 6
 #define FT_ERR_ARR_BAD_SIZE 7
+#define FT_ERR_REDEFINED_CLASS 8
 
 #define FtObj_HEAD Ft_Obj obj_base;
 
 #ifdef __cplusplus
 #define ft_c_open extern "C" {}
-#define fst_c_close }
+#define ft_c_close }
 #else
 #define ft_c_open
-#define fst_c_close
+#define ft_c_close
 #endif
 
 ft_c_open
@@ -56,6 +57,6 @@ void Ft_Free(Ft_Ptr p);
 Ft_Err Ft_ClearError();
 Ft_Err FtErr_Set(Ft_Err e);
 Ft_Err Ft_GetError();
-fst_c_close
+ft_c_close
 
 #endif //FASTTALK_FST_STDLIB_H

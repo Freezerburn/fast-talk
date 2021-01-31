@@ -76,7 +76,7 @@ Ft_MsgHandler FtMsgHandler_Init(Ft_Str name, Ft_MsgCallback fn) {
 }
 
 Ft_MsgHandler FtMsgHandler_InitNull() {
-    return FtMsgHandler_Init(FST_MkStr2("", 0), NULL);
+    return FtMsgHandler_Init(FtStr_InitLen("", 0), NULL);
 }
 
 Ft_Byte FST_IsMsgHandlerNull(Ft_MsgHandler handler) {

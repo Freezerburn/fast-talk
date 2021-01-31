@@ -40,9 +40,10 @@ static Ft_Obj* handle_plus(Ft_Interp* interp, Ft_IntObj* self, Ft_Msg* msg) {
 }
 
 void FtModuleInit_IntObj(Ft_Interp *interp) {
-    intObjCls = FtCls_Init(interp, FtStr_Init("Uint"));
-    intObjCls->alloc = intobj_alloc;
+    intObjCls = FtCls_Alloc(interp, FtStr_Init("Uint"), 1);
+    intObjCls->baseSize = sizeof(Ft_IntObj);
     intObjCls->constructor = (Ft_Constructor) intobj_constructor;
+    FtCls_Init(interp, intObjCls);
     FtCls_AddMsgHandler(intObjCls, FtStr_Init("+"), (Ft_MsgCallback) handle_plus);
     FtCls_AddMsgHandler(intObjCls, FtStr_Init("print"), (Ft_MsgCallback) handle_print);
 }

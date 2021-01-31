@@ -17,12 +17,12 @@ typedef struct Ft_Interp {
     struct Ft_Obj *nilObj;
 } Ft_Interp;
 
-Ft_Interp* FST_MkInterp();
-void FST_DelInterp(Ft_Interp *i);
-Ft_Interp* FST_CpInterp(Ft_Interp *i);
+Ft_Interp* FtInterp_Init();
+void FtInterp_Del(Ft_Interp *i);
+Ft_Interp* FtInterp_Copy(Ft_Interp *i);
 
-void FST_InterpAddCls(Ft_Interp *interp, struct Ft_Cls *cls);
-struct Ft_Cls* FST_InterpFindCls(Ft_Interp *interp, Ft_Str name);
+void FtInterp_AddCls(Ft_Interp *interp, struct Ft_Cls *cls);
+struct Ft_Cls* FtInterp_FindCls(Ft_Interp *interp, Ft_Str name);
 
 #define Ft_RETURN_NIL(interp) do { _FtObj_INCREF(interp->nilObj); return interp->nilObj; } while(0)
 
