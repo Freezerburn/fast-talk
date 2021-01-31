@@ -9,49 +9,28 @@ Ft_MemPool FtMemPool_Init(Ft_Uint valueSize) {
     ret.valueSize = valueSize;
     ret.pool = FtArr_Init(valueSize, Ft_InvalidSize);
     ret.freeValues = FtArr_Init(sizeof(uint8_t), Ft_InvalidSize);
+    ret.valuesWithOpenSlots = FtArr_Init(sizeof(Ft_Uint), Ft_InvalidSize);
     return ret;
 }
 
-Ft_Ptr FtMemPool_Alloc(Ft_MemPool* pool, Ft_Uint *idxOut) {
+Ft_Ptr FtMemPool_Alloc(Ft_MemPool *pool, Ft_Uint *idxOut) {
     Ft_Uint freeSlot = Ft_InvalidSize;
-    for (Ft_Uint i = 0; i < pool->freeValues.len; i++) {
-        uint8_t *freeInfo = FtArr_Get(&pool->freeValues, i);
-        if (((*freeInfo) & 1) == 1) {
-            freeSlot = i * 8;
-            break;
-        } else if (((*freeInfo) & 1 << 1) == 1 << 1) {
-            freeSlot = i * 8 + 1;
-            break;
-        } else if (((*freeInfo) & 1 << 2) == 1 << 2) {
-            freeSlot = i * 8 + 2;
-            break;
-        } else if (((*freeInfo) & 1 << 3) == 1 << 3) {
-            freeSlot = i * 8 + 3;
-            break;
-        } else if (((*freeInfo) & 1 << 4) == 1 << 4) {
-            freeSlot = i * 8 + 4;
-            break;
-        } else if (((*freeInfo) & 1 << 5) == 1 << 5) {
-            freeSlot = i * 8 + 5;
-            break;
-        } else if (((*freeInfo) & 1 << 6) == 1 << 6) {
-            freeSlot = i * 8 + 6;
-            break;
-        } else if (((*freeInfo) & 1 << 7) == 1 << 7) {
-            freeSlot = i * 8 + 7;
-            break;
+    if (pool->valuesWithOpenSlots.len > 0) {
+        freeSlot = *(Ft_Uint *) FtArr_Get(&pool->valuesWithOpenSlots, pool->valuesWithOpenSlots.len - 1);
+        uint8_t slotInfo = *(uint8_t *) FtArr_Get(&pool->freeValues, freeSlot);
+        for (uint8_t i = 0; i < 8; i++) {
+            Ft_Uint shifted = 1 << i;
+            if ((slotInfo & shifted) == shifted) {
+                freeSlot += i;
+                break;
+            }
         }
     }
     if (freeSlot == Ft_InvalidSize) {
-        Ft_Uint slot = pool->pool.len / 8;
+        FtArr_Append(&pool->valuesWithOpenSlots, &pool->freeValues.len);
         Ft_Uint bitLoc = pool->pool.len % 8;
-        uint8_t* slotInfo;
-        if (slot >= pool->freeValues.len) {
-            slotInfo = FtArr_AppendZeroed(&pool->freeValues);
-            *slotInfo = 0xFF;
-        } else {
-            slotInfo = FtArr_Get(&pool->freeValues, slot);
-        }
+        uint8_t *slotInfo = FtArr_AppendZeroed(&pool->freeValues);
+        *slotInfo = 0xFF;
         *slotInfo = (*slotInfo) & (0xFF ^ (1 << bitLoc));
         *idxOut = pool->pool.len;
         return FtArr_AppendZeroed(&pool->pool);
@@ -59,18 +38,24 @@ Ft_Ptr FtMemPool_Alloc(Ft_MemPool* pool, Ft_Uint *idxOut) {
 
     Ft_Uint slot = freeSlot / 8;
     Ft_Uint bitLoc = freeSlot % 8;
-    uint8_t* slotInfo = FtArr_Get(&pool->freeValues, slot);
+    uint8_t *slotInfo = FtArr_Get(&pool->freeValues, slot);
     *slotInfo = (*slotInfo) & (0xFF ^ (1 << bitLoc));
     *idxOut = freeSlot;
+    if (*slotInfo == 0) {
+        FtArr_Pop(&pool->valuesWithOpenSlots, NULL);
+    }
     if (freeSlot >= pool->pool.len) {
         return FtArr_AppendZeroed(&pool->pool);
     }
     return FtArr_Get(&pool->pool, freeSlot);
 }
 
-void FtMemPool_Free(Ft_MemPool* pool, Ft_Ptr p, Ft_Uint idx) {
+void FtMemPool_Free(Ft_MemPool *pool, Ft_Ptr p, Ft_Uint idx) {
     Ft_Uint index = idx / 8;
     Ft_Uint bitLoc = idx % 8;
-    uint8_t* slotInfo = FtArr_Get(&pool->freeValues, index);
+    uint8_t *slotInfo = FtArr_Get(&pool->freeValues, index);
+    if (*slotInfo == 0) {
+        FtArr_Append(&pool->valuesWithOpenSlots, &index);
+    }
     *slotInfo |= (1 << bitLoc);
 }

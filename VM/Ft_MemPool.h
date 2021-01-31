@@ -13,6 +13,7 @@ typedef struct Ft_MemPool {
     Ft_Uint valueSize;
     Ft_Arr pool;
     Ft_Arr freeValues;
+    Ft_Arr valuesWithOpenSlots;
 } Ft_MemPool;
 
 Ft_MemPool FtMemPool_Init(Ft_Uint);

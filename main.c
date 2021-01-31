@@ -99,6 +99,41 @@ int main() {
 
 #ifdef __MACH__
     printf("%llu nanos (full int create and addition cycle)\n", total / runs);
+    total = 0;
+#endif
+
+    int objsToMake = 100000;
+    Ft_Arr vs = FtArr_Init(sizeof(Ft_IntObj), objsToMake);
+    for (int i = 0; i < objsToMake; i++) {
+        Ft_Obj* v = FtIntObj_Init(10);
+        FtArr_Append(&vs, v);
+    }
+    for (int i = 0; i < vs.len; i++) {
+        if (rand() % 10 == 1) {
+            Ft_Obj* o = FtArr_Get(&vs, i);
+            FtObj_DECREF(o);
+        }
+    }
+    for (int i = 0; i < runs; i++) {
+#ifdef __MACH__
+        uint64_t clockBefore = mach_absolute_time();
+#endif
+        Ft_Obj *toAdd = FtIntObj_Init(10);
+        Ft_StaticMsg plusMsg = FtStaticMsg_Init(FtStr_Init("+"), toAdd, NULL);
+        Ft_Obj *result = FtObj_Handle(interp, testInt, FtStaticMsg_CastMsg(&plusMsg));
+        FtObj_DECREF(toAdd);
+        FtObj_DECREF(result);
+
+#ifdef __MACH__
+        uint64_t clockAfter = mach_absolute_time();
+        uint64_t nanoBefore = (clockBefore - initclock) * timebaseRatio;
+        uint64_t nanoAfter = (clockAfter - initclock) * timebaseRatio;
+        total += (nanoAfter - nanoBefore);
+#endif
+    }
+
+#ifdef __MACH__
+    printf("%llu nanos (full int create and addition cycle w/ garbage)\n", total / runs);
 #endif
 
     return 0;
