@@ -8,6 +8,7 @@
 ft_c_open
 typedef struct {
     Ft_Float growthFactor;
+    uint8_t compactOnRemove;
     Ft_Uint valueSize;
     Ft_Uint len;
     Ft_Uint cap;

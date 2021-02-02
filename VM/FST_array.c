@@ -21,6 +21,7 @@ Ft_Arr FtArr_Init(Ft_Uint valueSize, Ft_Uint initialCap) {
         initialCap = DEFAULT_CAP;
     }
     Ft_Arr ret;
+    ret.compactOnRemove = 1;
     ret.valueSize = valueSize;
     ret.len = 0;
     ret.cap = initialCap;
@@ -59,16 +60,19 @@ void FtArr_Delete(Ft_Arr *arr) {
     arr->ptr = NULL;
 }
 
+// TODO: Add hybrid mode to resize where the data from the previous memory is only partially copied to the new memory.
+//       Will prevent a large latency spike if the array is large and it needs to copy and memset a ton of memory.
 void FtArr_Resize(Ft_Arr *arr, Ft_Uint newCap) {
     if (newCap < arr->len) {
         FtErr_Set(FT_ERR_ARR_TOO_SMALL);
         return;
     }
 
+    Ft_Uint curBytes = arr->len * arr->valueSize;
     Ft_Uint newBytes = newCap * arr->valueSize;
     uint8_t *newArr = Ft_Alloc(newBytes);
-    memcpy(newArr, arr->ptr, newBytes);
-    // TODO: Zero init new bytes. Then remove memset from AppendZeroed.
+    memcpy(newArr, arr->ptr, curBytes);
+    memset(newArr + curBytes, 0, newBytes - curBytes);
     Ft_Free(arr->ptr);
     arr->ptr = newArr;
     arr->cap = newCap;
@@ -97,7 +101,6 @@ Ft_Ptr FtArr_AppendZeroed(Ft_Arr *arr) {
     }
     Ft_Ptr ret = arr->ptr + (arr->len * arr->valueSize);
     arr->len++;
-    memset(ret, 0, arr->valueSize);
     return ret;
 }
 
@@ -106,7 +109,7 @@ void FtArr_Pop(Ft_Arr *arr, Ft_Ptr dest) {
     if (dest != NULL) {
         memcpy(dest, arr->ptr + (arr->len * arr->valueSize), arr->valueSize);
     }
-    if (arr->len / 4 >= arr->cap) {
+    if (arr->compactOnRemove && arr->len / 4 >= arr->cap) {
         FtArr_Resize(arr, arr->len / 2);
     }
 }

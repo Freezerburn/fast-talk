@@ -1,6 +1,8 @@
 #ifndef FASTTALK_FST_OBJECT_H
 #define FASTTALK_FST_OBJECT_H
 
+#include <stdatomic.h>
+
 #include "FST_array.h"
 #include "FST_env.h"
 #include "FST_msg.h"
@@ -12,7 +14,7 @@ extern "C" {
 struct Ft_Obj {
     struct Ft_Cls *clazz;
     Ft_Arr handlers;
-    Ft_Uint refCnt;
+    atomic_uint_fast32_t refCnt;
     Ft_Uint poolIdx;
 };
 typedef struct Ft_Obj Ft_Obj;

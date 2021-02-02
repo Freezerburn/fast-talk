@@ -17,6 +17,7 @@ Ft_MemPool FtMemPool_Init(Ft_Uint valueSize) {
     ret.pool = FtArr_Init(valueSize, Ft_InvalidSize);
     ret.freeValues = FtArr_Init(sizeof(BITSET_TYPE), Ft_InvalidSize);
     ret.valuesWithOpenSlots = FtArr_Init(sizeof(Ft_Uint), Ft_InvalidSize);
+    ret.valuesWithOpenSlots.compactOnRemove = 0;
     return ret;
 }
 
