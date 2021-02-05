@@ -12,8 +12,18 @@ extern "C" {
 typedef void (*Ft_Constructor)(struct Ft_Cls *, struct Ft_Obj *, struct Ft_Obj **, Ft_Uint);
 typedef Ft_Ptr (*Ft_ClassAlloc)(struct Ft_Cls *);
 
+typedef struct Ft_ClsMsgCacheEntry {
+    Ft_MsgName* name;
+    Ft_MsgHandler handler;
+} Ft_ClsMsgCacheEntry;
+typedef struct Ft_ClsMsgCache {
+    Ft_Uint mask;
+    Ft_Uint occupied;
+    Ft_ClsMsgCacheEntry *buckets;
+} Ft_ClsMsgCache;
 typedef struct Ft_Cls {
     struct Ft_Cls *super;
+    Ft_ClsMsgCache cache;
     Ft_Str name;
     Ft_Arr handlers;
     Ft_Constructor constructor;
