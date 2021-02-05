@@ -30,7 +30,7 @@ Ft_Arr FtArr_Init(Ft_Uint valueSize, Ft_Uint initialCap) {
         ret.ptr = NULL;
         return ret;
     }
-    ret.ptr = Ft_Alloc(valueSize * initialCap);
+    ret.ptr = Ft_ZeroAlloc(valueSize * initialCap);
 #if PARANOID_ERRORS
     Ft_Err err = Ft_GetError();
     if (err) {
@@ -47,7 +47,6 @@ Ft_Arr FtArr_Init(Ft_Uint valueSize, Ft_Uint initialCap) {
     }
 #endif
 
-    memset(ret.ptr, 0, valueSize * initialCap);
     return ret;
 }
 
@@ -70,9 +69,8 @@ void FtArr_Resize(Ft_Arr *arr, Ft_Uint newCap) {
 
     Ft_Uint curBytes = arr->len * arr->valueSize;
     Ft_Uint newBytes = newCap * arr->valueSize;
-    uint8_t *newArr = Ft_Alloc(newBytes);
+    uint8_t *newArr = Ft_ZeroAlloc(newBytes);
     memcpy(newArr, arr->ptr, curBytes);
-    memset(newArr + curBytes, 0, newBytes - curBytes);
     Ft_Free(arr->ptr);
     arr->ptr = newArr;
     arr->cap = newCap;

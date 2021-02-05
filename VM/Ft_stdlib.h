@@ -52,6 +52,7 @@ typedef enum {
 } Ft_Type;
 
 Ft_Ptr Ft_Alloc(Ft_Uint b);
+Ft_Ptr Ft_ZeroAlloc(Ft_Uint b);
 void Ft_Free(Ft_Ptr p);
 
 Ft_Err Ft_ClearError();

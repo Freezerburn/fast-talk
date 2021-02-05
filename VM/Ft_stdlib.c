@@ -18,6 +18,19 @@ Ft_Ptr Ft_Alloc(Ft_Uint b) {
     return ret;
 }
 
+Ft_Ptr Ft_ZeroAlloc(Ft_Uint b) {
+    Ft_Ptr ret = calloc(b, 1);
+
+#if PARANOID_ERRORS
+    if (ret == NULL) {
+        printf("[ERROR] [Ft_Alloc] malloc failed to return a non-NULL pointer.\n");
+        FtErr_Set(FT_ERR_ALLOC);
+    }
+#endif
+
+    return ret;
+}
+
 void Ft_Free(Ft_Ptr p) {
     free(p);
 }
