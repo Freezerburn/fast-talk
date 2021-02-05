@@ -2,8 +2,8 @@
 // Created by Vincent K on 2019-05-11.
 //
 
-#ifndef FASTTALK_FST_STDLIB_H
-#define FASTTALK_FST_STDLIB_H
+#ifndef FASTTALK_FT_STDLIB_H
+#define FASTTALK_FT_STDLIB_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -59,4 +59,4 @@ Ft_Err FtErr_Set(Ft_Err e);
 Ft_Err Ft_GetError();
 ft_c_close
 
-#endif //FASTTALK_FST_STDLIB_H
+#endif //FASTTALK_FT_STDLIB_H

@@ -1,8 +1,8 @@
-#ifndef FASTTALK_FST_ENV_H
-#define FASTTALK_FST_ENV_H
+#ifndef FASTTALK_FT_ENV_H
+#define FASTTALK_FT_ENV_H
 
-#include "FST_array.h"
-#include "FST_str.h"
+#include "Ft_array.h"
+#include "Ft_str.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,4 +31,4 @@ Ft_EnvVal* FtEnv_Find(Ft_Env *env, Ft_Str name);
 #endif
 
 
-#endif //FASTTALK_FST_ENV_H
+#endif //FASTTALK_FT_ENV_H

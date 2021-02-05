@@ -1,9 +1,9 @@
-#ifndef FASTTALK_FST_CLASS_H
-#define FASTTALK_FST_CLASS_H
+#ifndef FASTTALK_FT_CLASS_H
+#define FASTTALK_FT_CLASS_H
 
-#include "FST_str.h"
-#include "FST_array.h"
-#include "FST_msg.h"
+#include "Ft_str.h"
+#include "Ft_array.h"
+#include "Ft_msg.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,4 +31,4 @@ Ft_MsgHandler FtCls_FindMsgHandler(Ft_Cls *cls, Ft_Str name);
 }
 #endif
 
-#endif //FASTTALK_FST_CLASS_H
+#endif //FASTTALK_FT_CLASS_H

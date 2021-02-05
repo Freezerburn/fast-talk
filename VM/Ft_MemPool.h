@@ -5,8 +5,8 @@
 #ifndef FASTTALK_FT_MEMPOOL_H
 #define FASTTALK_FT_MEMPOOL_H
 
-#include "FST_stdlib.h"
-#include "FST_array.h"
+#include "Ft_stdlib.h"
+#include "Ft_array.h"
 
 ft_c_open
 typedef struct Ft_MemPool {

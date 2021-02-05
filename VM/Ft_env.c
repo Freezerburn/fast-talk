@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "FST_env.h"
-#include "FST_object.h"
+#include "Ft_env.h"
+#include "Ft_object.h"
 
 Ft_Env FtEnv_Init(Ft_Env *parent, Ft_Uint len) {
     if (len == Ft_InvalidSize) {

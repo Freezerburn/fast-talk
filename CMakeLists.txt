@@ -15,7 +15,7 @@ find_package(Threads)
 
 add_executable(FastTalk
         CMakeLists.txt
-        main.c VM/FST_array.h VM/FST_array.c VM/FST_stdlib.c VM/FST_stdlib.h VM/FST_object.c VM/FST_object.h VM/FST_env.c VM/FST_env.h VM/FST_class.c VM/FST_class.h VM/FST_str.c VM/FST_str.h VM/FST_interpreter.c VM/FST_interpreter.h FST.h VM/FST_msg.c VM/FST_msg.h
+        main.c VM/Ft_array.h VM/Ft_array.c VM/Ft_stdlib.c VM/Ft_stdlib.h VM/Ft_object.c VM/Ft_object.h VM/Ft_env.c VM/Ft_env.h VM/Ft_class.c VM/Ft_class.h VM/Ft_str.c VM/Ft_str.h VM/Ft_interpreter.c VM/Ft_interpreter.h FastTalk.h VM/Ft_msg.c VM/Ft_msg.h
         VM/Ft_MemPool.c VM/Ft_MemPool.h
         NativeObjects/Ft_IntObj.c NativeObjects/Ft_IntObj.h
         tinycthread/tinycthread.c tinycthread/tinycthread.h)

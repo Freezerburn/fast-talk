@@ -1,9 +1,9 @@
-#ifndef FASTTALK_FST_ARRAY_H
-#define FASTTALK_FST_ARRAY_H
+#ifndef FASTTALK_FT_ARRAY_H
+#define FASTTALK_FT_ARRAY_H
 
 #include <stdint.h>
 
-#include "FST_stdlib.h"
+#include "Ft_stdlib.h"
 
 ft_c_open
 typedef struct {
@@ -28,4 +28,4 @@ Ft_Ptr FtArr_Get(Ft_Arr *arr, Ft_Uint idx);
 void FtArr_Set(Ft_Arr *arr, Ft_Uint idx, void *value);
 ft_c_open
 
-#endif //FASTTALK_FST_ARRAY_H
+#endif //FASTTALK_FT_ARRAY_H

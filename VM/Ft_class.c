@@ -4,8 +4,8 @@
 
 #include "../tinycthread/tinycthread.h"
 
-#include "FST_class.h"
-#include "FST_object.h"
+#include "Ft_class.h"
+#include "Ft_object.h"
 #include "Ft_MemPool.h"
 
 static once_flag defaultPoolInit = ONCE_FLAG_INIT;

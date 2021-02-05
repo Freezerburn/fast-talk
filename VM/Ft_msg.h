@@ -1,9 +1,9 @@
-#ifndef FASTTALK_FST_MSG_H
-#define FASTTALK_FST_MSG_H
+#ifndef FASTTALK_FT_MSG_H
+#define FASTTALK_FT_MSG_H
 
-#include "FST_stdlib.h"
-#include "FST_str.h"
-#include "FST_interpreter.h"
+#include "Ft_stdlib.h"
+#include "Ft_str.h"
+#include "Ft_interpreter.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,4 +48,4 @@ Ft_Byte FST_IsMsgHandlerNullP(Ft_MsgHandler *handler);
 }
 #endif
 
-#endif //FASTTALK_FST_MSG_H
+#endif //FASTTALK_FT_MSG_H

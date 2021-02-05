@@ -3,8 +3,8 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "FST_msg.h"
-#include "FST_object.h"
+#include "Ft_msg.h"
+#include "Ft_object.h"
 
 Ft_Msg *FtMsg_Init(Ft_Str name, ...) {
     va_list args;

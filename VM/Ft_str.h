@@ -1,7 +1,7 @@
-#ifndef FASTTALK_FST_STR_H
-#define FASTTALK_FST_STR_H
+#ifndef FASTTALK_FT_STR_H
+#define FASTTALK_FT_STR_H
 
-#include "FST_stdlib.h"
+#include "Ft_stdlib.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,4 +20,4 @@ Ft_Byte FtStr_Eq(Ft_Str l, Ft_Str r);
 }
 #endif
 
-#endif //FASTTALK_FST_STR_H
+#endif //FASTTALK_FT_STR_H

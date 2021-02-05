@@ -3,8 +3,8 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "FST_array.h"
-#include "FST_stdlib.h"
+#include "Ft_array.h"
+#include "Ft_stdlib.h"
 
 #define DEFAULT_VALUE_SIZE 32
 #define DEFAULT_CAP 32

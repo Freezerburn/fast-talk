@@ -1,7 +1,7 @@
 #include <string.h>
 
-#include "FST_object.h"
-#include "FST_class.h"
+#include "Ft_object.h"
+#include "Ft_class.h"
 #include "Ft_MemPool.h"
 
 Ft_Obj *FtObj_Init(Ft_Cls *clazz) {

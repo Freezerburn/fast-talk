@@ -1,11 +1,11 @@
-#ifndef FASTTALK_FST_OBJECT_H
-#define FASTTALK_FST_OBJECT_H
+#ifndef FASTTALK_FT_OBJECT_H
+#define FASTTALK_FT_OBJECT_H
 
 #include <stdatomic.h>
 
-#include "FST_array.h"
-#include "FST_env.h"
-#include "FST_msg.h"
+#include "Ft_array.h"
+#include "Ft_env.h"
+#include "Ft_msg.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,4 +35,4 @@ void _FtObj_DECREF(Ft_Obj* o);
 }
 #endif
 
-#endif //FASTTALK_FST_OBJECT_H
+#endif //FASTTALK_FT_OBJECT_H

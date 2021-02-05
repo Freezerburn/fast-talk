@@ -2,10 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "FST_interpreter.h"
-#include "FST_class.h"
-#include "FST_object.h"
-#include "FST_msg.h"
+#include "Ft_interpreter.h"
+#include "Ft_class.h"
+#include "Ft_object.h"
+#include "Ft_msg.h"
 
 static Ft_Cls* nilCls = NULL;
 

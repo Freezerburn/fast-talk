@@ -6,9 +6,9 @@
 
 #include <stdio.h>
 
-#include "../VM/FST_class.h"
-#include "../VM/FST_object.h"
-#include "../VM/FST_msg.h"
+#include "../VM/Ft_class.h"
+#include "../VM/Ft_object.h"
+#include "../VM/Ft_msg.h"
 
 static Ft_Cls* intObjCls = NULL;
 

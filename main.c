@@ -11,7 +11,7 @@
 #include <mach/clock.h>     /* clock_get_time */
 #endif
 
-#include "FST.h"
+#include "FastTalk.h"
 
 int main() {
 #ifdef __MACH__

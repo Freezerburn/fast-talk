@@ -4,7 +4,7 @@
 
 #include <string.h>
 
-#include "FST_str.h"
+#include "Ft_str.h"
 
 Ft_Str FtStr_InitLen(Ft_CStr str, Ft_Uint len) {
     Ft_Str ret;
