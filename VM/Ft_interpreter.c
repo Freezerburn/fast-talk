@@ -21,7 +21,7 @@ Ft_Interp* FtInterp_Init() {
 
     nilCls = FtCls_Alloc(interp, FtStr_Init("Nil"), 0);
     FtCls_Init(interp, nilCls);
-    FtCls_AddMsgHandler(nilCls, FtStr_Init("print"), handle_print);
+    FtCls_AddMsgHandler(nilCls, FtMsgName_Find(FtStr_Init("print")), handle_print);
     interp->nilObj = FtObj_Init(nilCls);
 
     return interp;

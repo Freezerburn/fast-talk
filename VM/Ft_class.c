@@ -67,7 +67,7 @@ void FtCls_Init(Ft_Interp* interp, Ft_Cls* clazz) {
     FtInterp_AddCls(interp, clazz);
 }
 
-void FtCls_AddMsgHandler(Ft_Cls *cls, Ft_Str name, Ft_MsgCallback fn) {
+void FtCls_AddMsgHandler(Ft_Cls *cls, Ft_MsgName* name, Ft_MsgCallback fn) {
     Ft_MsgHandler handler;
     handler.name = name;
     handler.fn = fn;
@@ -88,7 +88,7 @@ void FtCls_AddMsgHandler(Ft_Cls *cls, Ft_Str name, Ft_MsgCallback fn) {
 #endif
 }
 
-Ft_MsgHandler FtCls_FindMsgHandler(Ft_Cls *cls, Ft_Str name) {
+Ft_MsgHandler FtCls_FindMsgHandler(Ft_Cls *cls, Ft_MsgName* name) {
     for (Ft_Uint i = 0; i < cls->handlers.len; i++) {
         Ft_MsgHandler *handler = FtArr_Get(&cls->handlers, i);
 
@@ -112,7 +112,8 @@ Ft_MsgHandler FtCls_FindMsgHandler(Ft_Cls *cls, Ft_Str name) {
         }
 #endif
 
-        if (name.len == handler->name.len && strncmp(name.val, handler->name.val, name.len) == 0) {
+//        if (name.len == handler->name.len && strncmp(name.val, handler->name.val, name.len) == 0) {
+        if (name == handler->name) {
             return *handler;
         }
     }

@@ -40,16 +40,16 @@ void _FtObj_DECREF(Ft_Obj *o) {
     }
 }
 
-void FtObj_AddHandler(Ft_Obj *obj, Ft_Str name, Ft_MsgCallback fn) {
+void FtObj_AddHandler(Ft_Obj *obj, Ft_MsgName* name, Ft_MsgCallback fn) {
     Ft_MsgHandler* handler = FtArr_AppendZeroed(&obj->handlers);
     handler->name = name;
     handler->fn = fn;
 }
 
-Ft_MsgHandler FtObj_FindHandler(Ft_Obj *obj, Ft_Str name) {
+Ft_MsgHandler FtObj_FindHandler(Ft_Obj *obj, Ft_MsgName* name) {
     for (Ft_Uint i = 0; i < obj->handlers.len; i++) {
         Ft_MsgHandler *handler = FtArr_Get(&obj->handlers, i);
-        if (FtStr_Eq(name, handler->name)) {
+        if (name == handler->name) {
             return *handler;
         }
     }

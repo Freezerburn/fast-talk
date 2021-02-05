@@ -79,12 +79,13 @@ int main() {
     total = 0;
 #endif
 
+    Ft_MsgName* addMsg = FtMsgName_Find(FtStr_InitLen("+", 1));
     for (int i = 0; i < runs; i++) {
 #ifdef __MACH__
         uint64_t clockBefore = mach_absolute_time();
 #endif
         Ft_Obj *toAdd = FtIntObj_Init(10);
-        Ft_StaticMsg plusMsg = FtStaticMsg_Init(FtStr_Init("+"), toAdd, NULL);
+        Ft_StaticMsg plusMsg = FtStaticMsg_Init(addMsg, toAdd, NULL);
         Ft_Obj *result = FtObj_Handle(interp, testInt, FtStaticMsg_CastMsg(&plusMsg));
         FtObj_DECREF(toAdd);
         FtObj_DECREF(result);
@@ -119,7 +120,7 @@ int main() {
         uint64_t clockBefore = mach_absolute_time();
 #endif
         Ft_Obj *toAdd = FtIntObj_Init(10);
-        Ft_StaticMsg plusMsg = FtStaticMsg_Init(FtStr_Init("+"), toAdd, NULL);
+        Ft_StaticMsg plusMsg = FtStaticMsg_Init(addMsg, toAdd, NULL);
         Ft_Obj *result = FtObj_Handle(interp, testInt, FtStaticMsg_CastMsg(&plusMsg));
         FtObj_DECREF(toAdd);
         FtObj_DECREF(result);

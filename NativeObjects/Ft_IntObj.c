@@ -44,8 +44,8 @@ void FtModuleInit_IntObj(Ft_Interp *interp) {
     intObjCls->baseSize = sizeof(Ft_IntObj);
     intObjCls->constructor = (Ft_Constructor) intobj_constructor;
     FtCls_Init(interp, intObjCls);
-    FtCls_AddMsgHandler(intObjCls, FtStr_Init("+"), (Ft_MsgCallback) handle_plus);
-    FtCls_AddMsgHandler(intObjCls, FtStr_Init("print"), (Ft_MsgCallback) handle_print);
+    FtCls_AddMsgHandler(intObjCls, FtMsgName_Find(FtStr_Init("+")), (Ft_MsgCallback) handle_plus);
+    FtCls_AddMsgHandler(intObjCls, FtMsgName_Find(FtStr_Init("print")), (Ft_MsgCallback) handle_print);
 }
 
 Ft_Obj *FtIntObj_Init(Ft_Uint value) {
