@@ -143,7 +143,8 @@ Ft_MsgHandler FtCls_FindMsgHandler(Ft_Cls *cls, Ft_MsgName* name) {
                     cache->occupied = 0;
                 }
 
-                cacheIdx = ((uintptr_t)name) & mask;
+                Ft_Uint begin = ((uintptr_t)name) & mask;
+                cacheIdx = begin;
                 entry = cache->buckets + cacheIdx;
                 do {
                     if (entry->name == NULL) {
@@ -152,8 +153,9 @@ Ft_MsgHandler FtCls_FindMsgHandler(Ft_Cls *cls, Ft_MsgName* name) {
                         cache->occupied++;
                         break;
                     }
-                    entry++;
-                } while (entry->name != NULL);
+                    cacheIdx = (cacheIdx + 1) & mask;
+                    entry = cache->buckets + cacheIdx;
+                } while (cacheIdx != begin);
                 return *handler;
             }
         }
