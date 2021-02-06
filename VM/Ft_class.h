@@ -1,6 +1,8 @@
 #ifndef FASTTALK_FT_CLASS_H
 #define FASTTALK_FT_CLASS_H
 
+#include <stdatomic.h>
+
 #include "Ft_str.h"
 #include "Ft_array.h"
 #include "Ft_msg.h"
@@ -19,11 +21,12 @@ typedef struct Ft_ClsMsgCacheEntry {
 typedef struct Ft_ClsMsgCache {
     Ft_Uint mask;
     Ft_Uint occupied;
-    Ft_ClsMsgCacheEntry *buckets;
+    atomic_uint_fast32_t cacheAccessors;
+    Ft_ClsMsgCacheEntry buckets[0];
 } Ft_ClsMsgCache;
 typedef struct Ft_Cls {
     struct Ft_Cls *super;
-    Ft_ClsMsgCache cache;
+    _Atomic(Ft_ClsMsgCache*) cache;
     Ft_Str name;
     Ft_Arr handlers;
     Ft_Constructor constructor;
@@ -35,7 +38,6 @@ typedef struct Ft_Cls {
 Ft_Cls *FtCls_Alloc(Ft_Interp *interp, Ft_Str name, Ft_Uint native);
 void FtCls_Init(Ft_Interp* interp, Ft_Cls* clazz);
 void FtCls_AddMsgHandler(Ft_Cls *cls, Ft_MsgName* name, Ft_MsgCallback fn);
-Ft_MsgHandler FtCls_FindMsgHandler(Ft_Cls *cls, Ft_MsgName* name);
 
 #ifdef __cplusplus
 }

@@ -132,3 +132,7 @@ void FtArr_Set(Ft_Arr *arr, Ft_Uint idx, void *value) {
     uint8_t *arrPtr = arr->ptr;
     memcpy(arrPtr + totalBytes, value, arr->valueSize);
 }
+
+Ft_Uint FtArr_IndexOf(Ft_Arr* arr, Ft_Ptr item) {
+    return (arr->ptr - item) / arr->valueSize;
+}

@@ -17,9 +17,9 @@ typedef struct ObjPool {
     Ft_MemPool objects;
 } ObjPool;
 
-static void once_InitDefaultPool() {
+static void once_InitClassModule() {
     defaultPool = FtMemPool_Init(sizeof(Ft_Obj));
-    pools = FtArr_Init(sizeof(struct ObjPool), 10);
+    pools = FtArr_Init(sizeof(struct ObjPool), Ft_InvalidSize);
 }
 
 Ft_Cls *FtCls_Alloc(Ft_Interp *interp, Ft_Str name, Ft_Uint native) {
@@ -40,9 +40,10 @@ Ft_Cls *FtCls_Alloc(Ft_Interp *interp, Ft_Str name, Ft_Uint native) {
 #endif
 
     ret->super = NULL;
-    ret->cache.occupied = 0;
-    ret->cache.mask = 50 * 3 / 4;
-    ret->cache.buckets = Ft_ZeroAlloc(sizeof(Ft_ClsMsgCacheEntry) * 50);
+    ret->cache = Ft_Alloc(sizeof(Ft_ClsMsgCache) + sizeof(Ft_ClsMsgCacheEntry) * 50);
+    ret->cache->occupied = 0;
+    ret->cache->mask = 50 * 3 / 4;
+    atomic_init(&ret->cache->cacheAccessors, 0);
     ret->name = name;
     ret->handlers = FtArr_Init(sizeof(Ft_MsgHandler), 0);
     ret->constructor = NULL;
@@ -50,8 +51,8 @@ Ft_Cls *FtCls_Alloc(Ft_Interp *interp, Ft_Str name, Ft_Uint native) {
     return ret;
 }
 
-void FtCls_Init(Ft_Interp* interp, Ft_Cls* clazz) {
-    call_once(&defaultPoolInit, once_InitDefaultPool);
+void FtCls_Init(Ft_Interp *interp, Ft_Cls *clazz) {
+    call_once(&defaultPoolInit, once_InitClassModule);
 
     Ft_Cls *existing = FtInterp_FindCls(interp, clazz->name);
     if (existing != NULL && clazz != existing) {
@@ -70,7 +71,7 @@ void FtCls_Init(Ft_Interp* interp, Ft_Cls* clazz) {
     FtInterp_AddCls(interp, clazz);
 }
 
-void FtCls_AddMsgHandler(Ft_Cls *cls, Ft_MsgName* name, Ft_MsgCallback fn) {
+void FtCls_AddMsgHandler(Ft_Cls *cls, Ft_MsgName *name, Ft_MsgCallback fn) {
     Ft_MsgHandler handler;
     handler.name = name;
     handler.fn = fn;
@@ -89,78 +90,4 @@ void FtCls_AddMsgHandler(Ft_Cls *cls, Ft_MsgName* name, Ft_MsgCallback fn) {
         }
     }
 #endif
-}
-
-Ft_MsgHandler FtCls_FindMsgHandler(Ft_Cls *cls, Ft_MsgName* name) {
-    Ft_ClsMsgCacheEntry* entry;
-    Ft_ClsMsgCache* cache = &cls->cache;
-    Ft_Uint mask = cache->mask;
-    Ft_Uint cacheIdx = ((uintptr_t)name) & mask;
-    do {
-        entry = cache->buckets + cacheIdx;
-        if (entry->name == NULL) {
-            break;
-        }
-        cacheIdx = (cacheIdx + 1) & mask;
-    } while (entry->name != name);
-    if (entry->name != NULL) {
-        return entry->handler;
-    }
-
-    Ft_Cls* cur = cls;
-    do {
-        for (Ft_Uint i = 0; i < cls->handlers.len; i++) {
-            Ft_MsgHandler *handler = FtArr_Get(&cls->handlers, i);
-
-#if PARANOID_ERRORS
-            Ft_Err err = Ft_GetError();
-            if (err) {
-                switch (err) {
-                    case FT_ERR_ARR_DEFAULT_SIZE:
-                        printf("[ERROR] [FtCls_AddMsgHandler] Unable to iterate over message handler array: index out of range.\n");
-                        break;
-                    case FT_ERR_ARR_IDX_OUT_OF_RANGE:
-                        printf("[ERROR] [FtCls_AddMsgHandler] Idx %d out of range of handlers len %d.\n", i,
-                               cls->handlers.len);
-                        break;
-                    default:
-                        printf("[ERROR] [FtCls_AddMsgHandler] Unable to iterate over message handler array for unknown reason: %d.\n",
-                               err);
-                        break;
-                }
-                return FtMsgHandler_InitNull();
-            }
-#endif
-
-            if (name == handler->name) {
-                Ft_Uint cacheCap = mask + 1;
-                if (cache->occupied == cacheCap) {
-                    Ft_Uint newCap = cacheCap * 2;
-                    Ft_Free(cache->buckets);
-                    cache->buckets = Ft_ZeroAlloc(sizeof(Ft_ClsMsgCacheEntry) * newCap);
-                    cache->mask = newCap * 3 / 4;
-                    mask = cache->mask;
-                    cache->occupied = 0;
-                }
-
-                Ft_Uint begin = ((uintptr_t)name) & mask;
-                cacheIdx = begin;
-                entry = cache->buckets + cacheIdx;
-                do {
-                    if (entry->name == NULL) {
-                        entry->name = name;
-                        entry->handler = *handler;
-                        cache->occupied++;
-                        break;
-                    }
-                    cacheIdx = (cacheIdx + 1) & mask;
-                    entry = cache->buckets + cacheIdx;
-                } while (cacheIdx != begin);
-                return *handler;
-            }
-        }
-        cur = cur->super;
-    } while (cur != NULL);
-
-    return FtMsgHandler_InitNull();
 }

@@ -26,6 +26,8 @@ void FtArr_Pop(Ft_Arr *arr, Ft_Ptr dest);
 
 Ft_Ptr FtArr_Get(Ft_Arr *arr, Ft_Uint idx);
 void FtArr_Set(Ft_Arr *arr, Ft_Uint idx, void *value);
+
+Ft_Uint FtArr_IndexOf(Ft_Arr* arr, Ft_Ptr item);
 ft_c_open
 
 #endif //FASTTALK_FT_ARRAY_H
