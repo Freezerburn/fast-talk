@@ -86,7 +86,7 @@ int main() {
 #endif
         Ft_Obj *toAdd = FtIntObj_Init(10);
         Ft_StaticMsg plusMsg = FtStaticMsg_Init(addMsg, toAdd, NULL);
-        Ft_Obj *result = FtObj_Handle(interp, testInt, FtStaticMsg_CastMsg(&plusMsg));
+        Ft_Obj *result = FtObj_SendMsg(interp, testInt, FtStaticMsg_CastMsg(&plusMsg));
         FtObj_DECREF(toAdd);
         FtObj_DECREF(result);
 
@@ -121,7 +121,7 @@ int main() {
 #endif
         Ft_Obj *toAdd = FtIntObj_Init(10);
         Ft_StaticMsg plusMsg = FtStaticMsg_Init(addMsg, toAdd, NULL);
-        Ft_Obj *result = FtObj_Handle(interp, testInt, FtStaticMsg_CastMsg(&plusMsg));
+        Ft_Obj *result = FtObj_SendMsg(interp, testInt, FtStaticMsg_CastMsg(&plusMsg));
         FtObj_DECREF(toAdd);
         FtObj_DECREF(result);
 

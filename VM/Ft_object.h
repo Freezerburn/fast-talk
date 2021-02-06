@@ -22,8 +22,7 @@ typedef struct Ft_Obj Ft_Obj;
 Ft_Obj* FtObj_Init(struct Ft_Cls *clazz);
 
 void FtObj_AddHandler(Ft_Obj *obj, Ft_MsgName* name, Ft_MsgCallback fn);
-Ft_MsgHandler FtObj_FindHandler(Ft_Obj *obj, Ft_MsgName* name);
-Ft_Obj* FtObj_Handle(Ft_Interp *interp, Ft_Obj *target, Ft_Msg *msg);
+Ft_Obj* FtObj_SendMsg(Ft_Interp *interp, Ft_Obj *target, Ft_Msg *msg);
 
 void _FtObj_INCREF(Ft_Obj* o);
 void _FtObj_DECREF(Ft_Obj* o);
